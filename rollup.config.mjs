@@ -7,7 +7,7 @@ import terser from '@rollup/plugin-terser'
 import hashbang from 'rollup-plugin-shebang-bin'
 
 export default {
-  input: 'src/server.js',
+  input: 'src/server.mjs',
   output: {
     format: 'cjs',
     dir: 'dist',

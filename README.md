@@ -10,7 +10,7 @@ $ npm install
 
 ## Use it to debug
 
-* Launch this server _(`node server.js`)_ 
+* Launch this server
 * Replace your relying party by this server. Example with nginx:
 ```nginx
 server {
