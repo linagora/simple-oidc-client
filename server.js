@@ -1,19 +1,28 @@
+#!/usr/bin/node
+
 import fetch from 'node-fetch';
 import { Issuer, generators } from 'openid-client';
 import express from 'express';
 import bodyParser from 'body-parser';
 import jwt_decode from 'jwt-decode';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 
-let client;
-let issuerMetadata;
-let urlBack;
-let uriBack;
-let scopes;
+let client = '';
+let issuerMetadata = '';
+let urlBack = '';
+let uriBack = '';
+let scopes = 'openid profile email';
 let code_verifier;
-let opaque;
+let opaque = 0;
+let issuerUrl = '';
+let alg = 'RS512'
+let redirectUri = '';
+let clientId = '';
+let clientSecret = '';
 
 const returnError = (res) => {
   return err => {
@@ -74,7 +83,7 @@ const back = (req, res) => {
           OIDC code
           <ul>
             <li>ID_Token: <pre>${JSON.stringify(jwt_decode(id_token), null, 2)}</pre></li>
-            <li>Access_Token: <pre>${opaque ? access_token : JSON.stringify(jwt_decode(access_token), null, 2)}</pre></li>
+            <li>Access_Token: <pre>${opaque == 1 ? access_token : JSON.stringify(jwt_decode(access_token), null, 2)}</pre></li>
             <li>User info response: <pre>${JSON.stringify(userInfo, null, 2)}</pre></li>
           </ul>
         </body>
@@ -96,14 +105,13 @@ app.get('/config', (req, res) => {
   <body>
     <form method="POST">
       <table border="0"><tbody>
-        <tr><td>Who am I</td><td><input name="whoami" /></td></tr>
-        <tr><td>Issuer</td><td><input name="issuer" /></td></tr>
-        <tr><td>Client ID</td><td><input name="clientid" /></td></tr>
-        <tr><td>Client secret</td><td><input name="clientsecret" /></td></tr>
-        <tr><td>Redirect URI</td><td><input name="redirecturi" /></td></tr>
-        <tr><td>Scopes</td><td><input name="scopes" value="openid email profile" /></td></tr>
-        <tr><td>Algorithm</td><td><input name="alg" value="RS512" /></td></tr>
-        <tr><td>Opaque token</td><td><input name="opaque" value="0" /></td></tr>
+        <tr><td>Issuer</td><td><input name="issuer" value="${issuerUrl}" /></td></tr>
+        <tr><td>Client ID</td><td><input name="clientid" value="${clientId}" /></td></tr>
+        <tr><td>Client secret</td><td><input type="password" name="clientsecret" value="${clientSecret}" /></td></tr>
+        <tr><td>Redirect URI</td><td><input name="redirecturi" value="${redirectUri}" /></td></tr>
+        <tr><td>Scopes</td><td><input name="scopes" value="${scopes}" /></td></tr>
+        <tr><td>Algorithm</td><td><input name="alg" value="${alg}" /></td></tr>
+        <tr><td>Opaque token</td><td><input name="opaque" value="${opaque}" /></td></tr>
       </tbody></table>
       <input type="submit" value="OK">
     </form>
@@ -113,24 +121,9 @@ app.get('/config', (req, res) => {
 
 app.post('/config', (req, res) => {
   const rt = returnError(res)
-  console.log('Got body:', req.body);
   const body = req.body;
-
-  Issuer.discover(body.issuer).then( issuer => {
-    console.log('Discovered issuer %s', issuer.issuer);
-    issuerMetadata = issuer.metadata;
-    try {
-      client = new issuer.Client({
-        client_id: body.clientid,
-        client_secret: body.clientsecret,
-        redirect_uris: [body.redirecturi],
-        id_token_signed_response_alg: body.alg,
-      });
-      console.log('Client created');
-      urlBack = body.redirecturi;
-      uriBack = body.redirecturi.replace(/^https?:\/\/[^/]+/, '');
-      scopes = body.scopes;
-      opaque = body.opaque;
+  discover(body.issuer, body.clientid, body.clientsecret, body.redirecturi, body.alg, body.scopes, body.opaque)
+    .then( () => {
       res.send(`<html>
         <title>Config</title>
         <body>
@@ -138,17 +131,17 @@ app.post('/config', (req, res) => {
           <a href="/">Try it</a>
         </body>
       </html>`);
-    } catch (e) {
-      rt(e);
-    };
-  }).catch(rt)
+    })
+    .catch(rt)
 })
 
+/**
+ * Default cathc: detect back-channel or warn
+ */
 app.get('*', (req, res) => {
   if (req.path === uriBack) {
     return back(req, res)
   }
-  console.log('res', req.path);
   res.send(`<html>
     <title>Config</title>
     <body>
@@ -157,4 +150,93 @@ app.get('*', (req, res) => {
   </html>`);
 });
 
-app.listen(5000);
+const discover = async (_issuerUrl, client_id, client_secret, redir, id_token_signed_response_alg, _scopes, _opaque) => {
+  const issuer = await Issuer.discover(_issuerUrl);
+  issuerUrl = _issuerUrl;
+  clientId = client_id;
+  clientSecret = client_secret;
+  alg = id_token_signed_response_alg;
+  scopes = _scopes;
+  opaque = _opaque;
+  redirectUri = redir;
+  urlBack = redir;
+  uriBack = redir.replace(/^https?:\/\/[^/]+/, '');
+  console.log('Discovered issuer %s', issuer.issuer);
+  issuerMetadata = issuer.metadata;
+  client = new issuer.Client({
+    client_id,
+    client_secret,
+    redirect_uris: [redir],
+    id_token_signed_response_alg,
+  });
+  console.log('OIDC client created');
+}
+
+// console.log(yargs(hideBin(process.argv)).argv);
+const argv = yargs(hideBin(process.argv))
+  .option('port', {
+    alias: 'p',
+    type: 'number',
+    default: 5000,
+    describe: 'Port to listen on'
+  })
+  .option('issuer', {
+    alias: 'i',
+    type: 'string',
+    describe: 'OIDC Issuer URL',
+  })
+  .option('client-id', {
+    alias: 'n',
+    type: 'string',
+    describe: 'OIDC Client ID',
+  })
+  .option('client-secret', {
+    alias: 's',
+    type: 'string',
+    describe: 'OIDC Client Secret',
+  })
+  .option('redirect-uri', {
+    alias: 'r',
+    type: 'string',
+    describe: 'Redirection URI',
+  })
+  .option('alg', {
+    type: 'string',
+    describe: 'Algorithm',
+    default: 'RS512',
+  })
+  .option('scopes', {
+    type: 'string',
+    describe: 'Scopes',
+    default: 'openid email profile',
+  })
+  .option('opaque-token', {
+    type: 'boolean',
+    describe: 'Access token is opaque',
+    default: false,
+  })
+  .argv;
+
+new Promise((resolve, reject) => {
+  if (argv.clientId || argv.clientSecret || argv.redirectUri || argv.issuer ) {
+    if (!(argv.clientId && argv.clientSecret && argv.redirectUri)) {
+      console.error('Need --client-id and --client-secret and --redirect-uri and --issuer');
+      process.exit(1);
+    }
+    discover(argv.issuer, argv.clientId, argv.clientSecret, argv.redirectUri, argv.alg, argv.scopes, (argv.opaque ? 1 : 0))
+    .then(resolve)
+    .catch(reject)
+  } else {
+    resolve();
+  }
+}).then(() => {
+  console.log(`Server started on port ${argv.port}`);
+  app.listen(argv.port);
+}).catch( e => {
+  console.error('Unable to initialize client', e);
+  process.exit(1);
+})
+
+
+
+
