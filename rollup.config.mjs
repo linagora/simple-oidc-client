@@ -1,5 +1,3 @@
-// rollup -i server.js -o test.js -f cjs -p @rollup/plugin-node-resolve -p @rollup/plugin-commonjs -p @rollup/plugin-json -p @rollup/plugin-terser
-
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
@@ -18,6 +16,8 @@ export default {
     nodeResolve(),
     json(),
     terser(),
-    hashbang(),
+    hashbang({
+      include: ['**/*.mjs']
+    }),
   ],
 };

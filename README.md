@@ -1,12 +1,22 @@
 # Simple OIDC client
 
-## Prepare
+## Install
+
+Install it using npm:
+```shell
+$ npm i -g simple-oidc-client
+```
+
+then the server is in your path _(`simple-oidc-client`)_
+
+or clone the source repository:
 
 ```shell
 $ git clone https://github.com/linagora/simple-oidc-client.git
 $ cd simple-oidc-client
 $ npm install
 ```
+then the server is `./src/server.mjs`
 
 ## Use it to debug
 
