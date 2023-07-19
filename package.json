@@ -4,22 +4,35 @@
   "description": "Simple OpenID-Connect Client",
   "main": "server.js",
   "bin": {
-    "simple-oidc-client": "./server.js"
+    "simple-oidc-client": "./dist/server.js"
   },
-  "type": "module",
-  "scripts": {},
+  "files": [
+    "./dist",
+    "LICENSE",
+    "*.md"
+  ],
+  "scripts": {
+    "build": "rollup -c"
+  },
   "keywords": [
     "OIDC",
     "OpenID-Connect"
   ],
   "author": "Xavier Guimard <xguimard@linagora.com>",
   "license": "MIT",
-  "dependencies": {
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.3",
+    "@rollup/plugin-json": "^6.0.0",
+    "@rollup/plugin-node-resolve": "^15.1.0",
+    "@rollup/plugin-terser": "^0.4.3",
     "express": "^4.18.2",
     "jwt-decode": "^3.1.2",
     "node-fetch": "^3.3.1",
     "node-html-parser": "^6.1.5",
     "openid-client": "^5.4.3",
+    "rollup": "^3.26.3",
+    "rollup-plugin-node-polyfills": "^0.2.1",
+    "rollup-plugin-shebang-bin": "^0.0.5",
     "yargs": "^17.7.2"
   }
 }
