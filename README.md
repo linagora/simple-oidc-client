@@ -29,3 +29,20 @@ server {
 * Launch your browser and connect to your app. In this example: https://tmail.client.fr/
 * Configure OIDC parameters with the values of your relying party and validate
 * If it's OK, follow the link and launch OIDC flow, you'll see OIDC data
+
+## Command line options
+
+You can use command-line options to configure the OIDC client:
+
+```
+      --help           Show help                                       [boolean]
+      --version        Show version number                             [boolean]
+  -p, --port           Port to listen on                [number] [default: 5000]
+  -i, --issuer         OIDC Issuer URL                                  [string]
+  -n, --client-id      OIDC Client ID                                   [string]
+  -s, --client-secret  OIDC Client Secret                               [string]
+  -r, --redirect-uri   Redirection URI                                  [string]
+      --alg            Algorithm                     [string] [default: "RS512"]
+      --scopes         Scopes         [string] [default: "openid email profile"]
+      --opaque-token   Access token is opaque         [boolean] [default: false]
+```
