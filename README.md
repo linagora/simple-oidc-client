@@ -1,5 +1,13 @@
 # Simple OIDC client
 
+## Prepare
+
+```shell
+$ git clone https://github.com/linagora/simple-oidc-client.git
+$ cd simple-oidc-client
+$ npm install
+```
+
 ## Use it to debug
 
 * Launch this server _(`node server.js`)_ 
