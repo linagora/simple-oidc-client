@@ -56,3 +56,8 @@ You can use command-line options to configure the OIDC client:
       --scopes         Scopes         [string] [default: "openid email profile"]
       --opaque-token   Access token is opaque         [boolean] [default: false]
 ```
+
+## GET parameters
+
+When app is configured, if it is called with a "auto" parameter in the GET
+query, it launches automatically the OIDC flow.

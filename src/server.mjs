@@ -41,7 +41,7 @@ const returnError = (res) => {
  */
 
 app.get('/', (req, res) => {
-  if (client == null) {
+  if (!client) {
     return res.redirect('/config');
   }
   code_verifier = generators.codeVerifier();
@@ -52,17 +52,21 @@ app.get('/', (req, res) => {
     code_challenge,
     code_challenge_method: 'S256',
   });
-  res.send(`<html>
-    <title>Start OIDC</title>
-    <body>
-      Ready to launch OIDC authorization flow
-      <ul>
-        <li>Code: ${code_challenge}</li>
-        <li>Scopes: ${scopes}</li>
-      </ul>
-      <a href="${url}">Let's go!</a>
-    </body>
-  </html>`)
+  if (req.query && req.query.auto != undefined) {
+    res.redirect(url);
+  } else {
+    res.send(`<html>
+      <title>Start OIDC</title>
+      <body>
+        Ready to launch OIDC authorization flow
+        <ul>
+          <li>Code: ${code_challenge}</li>
+          <li>Scopes: ${scopes}</li>
+        </ul>
+        <a href="${url}">Let's go!</a>
+      </body>
+    </html>`);
+  }
 });
 
 const back = (req, res) => {
