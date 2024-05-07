@@ -28,13 +28,13 @@ SCOPE='openid email profile'
 
 client () {
 	umask 0077
-	curl -s --user-agent 'LLNG-CLient/2.20.0' --cookie "$COOKIEJAR" \
+	curl -sk --user-agent 'LLNG-CLient/2.20.0' --cookie "$COOKIEJAR" \
 		--cookie-jar "$COOKIEJAR" -H "Accept: application/json" "$@"
 }
 
 clientWeb () {
 	umask 0077
-	curl -s --user-agent 'LLNG-CLient/2.20.0' --cookie "$COOKIEJAR" \
+	curl -sk --user-agent 'LLNG-CLient/2.20.0' --cookie "$COOKIEJAR" \
 		--cookie-jar "$COOKIEJAR" -H "Accept: test/html" "$@"
 }
 
