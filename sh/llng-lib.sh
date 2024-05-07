@@ -155,7 +155,7 @@ _queryToken () {
 	fi
 
 	# Get access token
-	TMP=$(client -XPOST -SsL -d "client_id=${CLIENT_ID}" \
+	RAWTOKENS=$(client -XPOST -SsL -d "client_id=${CLIENT_ID}" \
 		-d 'grant_type=authorization_code' \
 		-d "$REDIRECT_URI" \
 		-d "$SCOPE" \
@@ -163,19 +163,26 @@ _queryToken () {
 		$AUTHZ \
 		--data-urlencode "code=$_CODE" \
 		"${LLNG_URL}/oauth2/token")
-	if echo "$TMP" | grep access_token >/dev/null 2>&1; then
-		LLNG_ACCESS_TOKEN=$(echo "$TMP" | jq -r .access_token)
+	if echo "$RAWTOKENS" | grep access_token >/dev/null 2>&1; then
+		LLNG_ACCESS_TOKEN=$(echo "$RAWTOKENS" | jq -r .access_token)
 	else
 		echo "Bad response:" >&2
-		echo $TMP >&2
+		echo $RAWTOKENS >&2
 		exit 3
 	fi
-	if echo "$TMP" | grep id_token >/dev/null 2>&1; then
-		LLNG_ID_TOKEN=$(echo "$TMP" | jq -r .id_token)
+	if echo "$RAWTOKENS" | grep id_token >/dev/null 2>&1; then
+		LLNG_ID_TOKEN=$(echo "$RAWTOKENS" | jq -r .id_token)
 	fi
-	if echo "$TMP" | grep refresh_token >/dev/null 2>&1; then
-		LLNG_REFRESH_TOKEN=$(echo "$TMP" | jq -r .refresh_token)
+	if echo "$RAWTOKENS" | grep refresh_token >/dev/null 2>&1; then
+		LLNG_REFRESH_TOKEN=$(echo "$RAWTOKENS" | jq -r .refresh_token)
 	fi
+}
+
+getOidcTokens () {
+	if test "$RAWTOKENS" = ''; then
+		_queryToken
+	fi
+	echo $RAWTOKENS
 }
 
 getAccessToken () {
@@ -197,4 +204,11 @@ getRefreshToken () {
 		_queryToken
 	fi
 	echo $LLNG_REFRESH_TOKEN
+}
+
+getUserInfo () {
+	if test "$LLNG_ACCESS_TOKEN" = ''; then
+		_queryToken
+	fi
+	client -H "Authorization: Bearer $LLNG_ACCESS_TOKEN"  "${LLNG_URL}/oauth2/userinfo"
 }

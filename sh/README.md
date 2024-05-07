@@ -11,11 +11,13 @@ $ llng <options> <command>
 ## Available commands
 
 * **whoami**: simply return your id
-* **languages**: get supported languages
+* **languages**: get supported languages _(JSON)_
 * **llng_cookie**: get LLNG cookie
+* **oidc_tokens**: get the raw response of OIDC `/token` query _(JSON)_
 * **access_token**: get an OpenID-Connect `access_token`
 * **id_token**: get an OpenID-Connect `id_token`
 * **refresh_token**: get an OpenID-Connect `refresh_token`
+* **user_info**: get OpenID-Connect response to `/userinfo` query _(JSON)_
 
 ## Options
 
