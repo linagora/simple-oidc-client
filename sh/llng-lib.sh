@@ -56,7 +56,7 @@ build_llng_url () {
 
 # 1. LLNG Connection
 
-connect () {
+llng_connect () {
 	LLNG_CONNECTED=0
 	if client -f $LLNG_URL >/dev/null 2>&1; then
 		LLNG_CONNECTED=1
@@ -96,7 +96,7 @@ connect () {
 
 whoami () {
 	if test "$LLNG_CONNECTED" != 1; then
-		connect
+		llng_connect
 	fi
 	client "${LLNG_URL}/mysession/?whoami" | jq -r '.result'
 }
@@ -107,7 +107,7 @@ getLanguages () {
 
 getLlngId () {
 	if test "$LLNG_CONNECTED" != 1; then
-		connect
+		llng_connect
 	fi
 	client -lv "${LLNG_URL}/session/my/?whoami" 2>&1 | grep -E '> *Cookie' | sed -e 's/.*Cookie: *//'
 }
@@ -125,7 +125,7 @@ getCodeChallenge () {
 
 _queryToken () {
 	if test "$LLNG_CONNECTED" != 1; then
-		connect
+		llng_connect
 	fi
 	CODE_VERIFIER=''
 	CODE_CHALLENGE=''

@@ -7,13 +7,13 @@
 #
 # Licence : GPL V3 https://www.gnu.org/licenses/gpl-3.0.en.html
 
-LLNGDIRLIB=$(dirname $(test -L "$0" && readlink "$0" || echo "$0"))
+SIMPLEOIDCCLIENTLIBDIR=${SIMPLEOIDCCLIENTLIBDIR:-$(dirname $(test -L "$0" && readlink "$0" || echo "$0"))}
 
-if [ ! -f $LLNGDIRLIB/llng-lib.sh ] ; then
-	LLNGDIRLIB=$(dirname $0)/"$LLNGDIRLIB"
+if [ ! -f $SIMPLEOIDCCLIENTLIBDIR/llng-lib.sh ] ; then
+	SIMPLEOIDCCLIENTLIBDIR=$(dirname $0)/"$SIMPLEOIDCCLIENTLIBDIR"
 fi
 
-. $LLNGDIRLIB/llng-lib.sh
+. $SIMPLEOIDCCLIENTLIBDIR/llng-lib.sh
 
 check_install
 

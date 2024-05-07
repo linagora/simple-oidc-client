@@ -36,6 +36,20 @@ OpenID-Connect options:
 * **--redirect-uri**: one authorized redirect uri of the OpenID-Connect application
 * **--scope**: the wanted scope. Default: `openid profile email`
 
+## Using this inside a shell program
+
+To use this inside a shell program, you can simple "source" the [llng-lib.sh](./llng-lib.sh)
+file. Then you'll have these functions, corresponding to the different commands:
+
+* **llng_connect**: establish LLNG connexion _(== get a valid cookie)_
+* **getLanguages**
+* **getLlngId**
+* **getOidcTokens**
+* **getAccessToken**
+* **getIdToken**
+* **getRefreshToken**
+* **getUserInfo**
+
 ## License and copyright
 
 Copyright: 2024 [Linagora](https://linagora.com)
