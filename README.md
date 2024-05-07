@@ -6,6 +6,8 @@ Various OpenID-Connect tools:
 
 ## License and copyright
 
+Copyright: 2024 [Linagora](https://linagora.com)
+
 These tools are a free softwares; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
