@@ -1,0 +1,122 @@
+#!/bin/sh
+#
+
+#
+# Authors : P Vilarem <pvilarem@linagora.com>
+#           X Guimard <xguimard@linagora.com>
+#
+# Licence : GPL V3 https://www.gnu.org/licenses/gpl-3.0.en.html
+
+LLNGDIRLIB=$(dirname $(test -L "$0" && readlink "$0" || echo "$0"))
+
+. $LLNGDIRLIB/llng-lib.sh
+
+check_install
+
+# 1. GET PARAMETERS
+
+TEMP=$(getopt -o 'c:u:Pp:h:H:ki:s:r:' --long 'cookie-jar:,login:,password:,prompt,llng-url:,llng-server:,pkce,client-id:,client-secret:,redirect-uri:,scope:' -- "$@")
+
+if [ $? -ne 0 ]; then
+        echo 'Terminating...' >&2
+        exit 1
+fi
+eval set -- "$TEMP"
+unset TEMP
+
+while true; do
+	case "$1" in
+		'-c'|'--cookie-jar')
+			COOKIEJAR="$2"
+			shift 2
+			;;
+		'-u'|'--login')
+			LLNG_LOGIN="$2"
+			shift 2
+			;;
+		'-P'|'--prompt')
+			PROMPT=yes
+			shift
+			;;
+		'-p'|s'--pasword')
+			LLNG_PASSWORD="$2"
+			shift 2
+			;;
+		'-h'|'--llng-server')
+			LLNG_SERVER="$2"
+			shift 2
+			;;
+		'-H'|'--llng-url')
+			LLNG_URL="$2"
+			shift 2
+			;;
+		'-k'|'--pkce')
+			PKCE=1
+			shift
+			;;
+		'-i'|'--client-id')
+			CLIENT_ID="$2"
+			shift 2
+			;;
+		'-s'|'--client-secret')
+			CLIENT_SECRET="$2"
+			shift 2
+			;;
+		'-r'|'--redirect-uri')
+			REDIRECT_URI="$2"
+			shift 2
+			;;
+		'-o'|'--scope')
+			SCOPE="$2"
+			shift 2
+			;;
+		'--')
+                        shift
+                        break
+			;;
+		?)
+			echo Aborting >&2
+			exit 1
+			;;
+	esac
+done
+
+if test "$LLNG_SERVER" = "" -a "$LLNG_URL" = ""
+then
+	LLNG_SERVER=$(askString Server)
+fi
+
+if test "$LLNG_URL" = ""
+then
+	LLNG_URL=$(build_llng_url)
+fi
+
+COMMAND="$1"
+if test "$COMMAND" != ""; then
+	shift
+fi
+
+case "$COMMAND" in
+	whoami)
+		whoami
+		;;
+	languages)
+		getLanguages
+		;;
+	llng_cookie)
+		getLlngId
+		;;
+	access_token)
+		getAccessToken
+		;;
+	id_token)
+		getIdToken
+		;;
+	refresh_token)
+		getRefreshToken
+		;;
+	*)
+		echo "BAD COMMAND $COMMAND" >&2
+		echo "Accepted commands: whoami, access_token, id_token, refresh_token" >&2
+		exit 1
+esac
