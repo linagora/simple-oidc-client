@@ -6,6 +6,7 @@
 
 ```shell
 $ llng <options> <command>
+```
 
 ## Available commands
 
