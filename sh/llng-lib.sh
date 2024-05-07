@@ -210,5 +210,5 @@ getUserInfo () {
 	if test "$LLNG_ACCESS_TOKEN" = ''; then
 		_queryToken
 	fi
-	client -H "Authorization: Bearer $LLNG_ACCESS_TOKEN"  "${LLNG_URL}/oauth2/userinfo"
+	client -H "Authorization: Bearer $LLNG_ACCESS_TOKEN"  "${LLNG_URL}/oauth2/userinfo" | jq -S
 }
