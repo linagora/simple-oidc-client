@@ -21,11 +21,11 @@ $ llng <options> <command>
 
 You'll be prompted for any missing option
 
-* **--cookie-jar**: where to store LLNG sessions. Default: `~/.cache/llng-cookies
+* **--cookie-jar**: where to store LLNG sessions. Default: `~/.cache/llng-cookies`
 * **--login**: your LLNG login
 * **--password**: your LLNG password
 * **--llng-server**: LLNG portal hostname _(with :port)_, used to calculate **--llng-url** if not given. Default: `localhost:19876`
-* **--llng-url**: LLNG portal URL. Default: `https://<value of --llng-server>
+* **--llng-url**: LLNG portal URL. Default: `https://<value of --llng-server>`
 
 OpenID-Connect options:
 * application credentials:
