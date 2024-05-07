@@ -28,13 +28,13 @@ SCOPE='openid email profile'
 
 client () {
 	umask 0077
-	curl -SsL --user-agent 'LLNG-CLient/2.20.0' --cookie "$COOKIEJAR" \
+	curl -s --user-agent 'LLNG-CLient/2.20.0' --cookie "$COOKIEJAR" \
 		--cookie-jar "$COOKIEJAR" -H "Accept: application/json" "$@"
 }
 
 clientWeb () {
 	umask 0077
-	curl -SsL --user-agent 'LLNG-CLient/2.20.0' --cookie "$COOKIEJAR" \
+	curl -s --user-agent 'LLNG-CLient/2.20.0' --cookie "$COOKIEJAR" \
 		--cookie-jar "$COOKIEJAR" -H "Accept: test/html" "$@"
 }
 
@@ -147,7 +147,7 @@ _queryToken () {
 	REDIRECT_URI=redirect_uri=$(uri_escape "$REDIRECT_URI")
 	SCOPE=scope=$(uri_escape "${SCOPE}")
 	TMP="${LLNG_URL}/oauth2/authorize?client_id=${CLIENT_ID}&${REDIRECT_URI}&response_type=code&${SCOPE}${CODE_CHALLENGE}"
-	_CODE=$(clientWeb -iSsL $TMP | grep "^Location:" | sed -e "s/^.*code=//;s/&.*$//;s/\r//g")
+	_CODE=$(clientWeb -i $TMP | grep -i "^Location:" | sed -e "s/^.*code=//;s/&.*$//;s/\r//g")
 	if test "$_CODE" = ""; then
 		echo "Unable to get OIDC CODE, check your parameters" >&2
 		echo "Tried with: $TMP" >&2
