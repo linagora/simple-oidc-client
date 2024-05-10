@@ -70,7 +70,10 @@ llng_connect () {
 		
 		if test "$PROMPT" = yes -o "$LLNG_PASSWORD" = ""
 		then
+			stty -echo
 			LLNG_PASSWORD=$(askString Password)
+			stty echo
+			echo
 		fi
 	
 		# Test if token is required
