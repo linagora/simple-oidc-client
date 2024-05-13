@@ -148,6 +148,9 @@ case "$COMMAND" in
 	user_info)
 		getUserInfo
 		;;
+	introspection)
+		getIntrospection "$@"
+		;;
 	*)
 		echo "BAD COMMAND $COMMAND" >&2
 		echo "Accepted commands: whoami, access_token, id_token, refresh_token" >&2

@@ -38,8 +38,17 @@ clientWeb () {
 		--cookie-jar "$COOKIEJAR" -H "Accept: test/html" "$@"
 }
 
-uri_escape() {
+uri_escape () {
 	perl -MURI::Escape -e '$_=uri_escape($ARGV[0]);s/(?:\s|%20)+/+/g;print' "$1"
+}
+
+_authz () {
+	if test "$CLIENT_ID" = "" ; then
+		CLIENT_ID=$(askString 'Client ID')
+	fi
+	if test "$CLIENT_SECRET" != ""; then
+		echo "--basic -u $CLIENT_ID:$CLIENT_SECRET"
+	fi
 }
 
 check_install () {
@@ -132,18 +141,12 @@ _queryToken () {
 	fi
 	CODE_VERIFIER=''
 	CODE_CHALLENGE=''
-	AUTHZ=''
 	if test "$PKCE" = 1; then
 		CODE_VERIFIER=$(getCodeVerifier)
 		CODE_CHALLENGE='&code_challenge_method=S256&code_challenge='$(getCodeChallenge $CODE_VERIFIER)
 		CODE_VERIFIER="-d code_verifier="$(uri_escape $CODE_VERIFIER)
 	fi
-	if test "$CLIENT_ID" = "" ; then
-		CLIENT_ID=$(askString 'Client ID')
-	fi
-	if test "$CLIENT_SECRET" != ""; then
-		AUTHZ="--basic -u $CLIENT_ID:$CLIENT_SECRET"
-	fi
+	AUTHZ=$(_authz)
 	if test "$REDIRECT_URI" = ""; then
 		REDIRECT_URI=$(askString 'Redirect URI')
 	fi
@@ -210,8 +213,20 @@ getRefreshToken () {
 }
 
 getUserInfo () {
-	if test "$LLNG_ACCESS_TOKEN" = ''; then
+	TOKEN=${1:-$LLNG_ACCESS_TOKEN}
+	if test "$TOKEN" = ''; then
 		_queryToken
+		TOKEN="$LLNG_ACCESS_TOKEN"
 	fi
-	client -H "Authorization: Bearer $LLNG_ACCESS_TOKEN"  "${LLNG_URL}/oauth2/userinfo" | jq -S
+	client -H "Authorization: Bearer $TOKEN"  "${LLNG_URL}/oauth2/userinfo" | jq -S
+}
+
+getIntrospection () {
+	TOKEN=${1:-$LLNG_ACCESS_TOKEN}
+	if test "$TOKEN" = ''; then
+		_queryToken
+		TOKEN="$LLNG_ACCESS_TOKEN"
+	fi
+	AUTHZ=$(_authz)
+	client $AUTHZ -d "token=$TOKEN" "${LLNG_URL}/oauth2/introspect" | jq -S
 }

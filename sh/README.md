@@ -5,7 +5,7 @@
 ## Usage
 
 ```shell
-$ llng <options> <command>
+$ llng <options> <command> <parameters>
 ```
 
 ## Available commands
@@ -17,7 +17,10 @@ $ llng <options> <command>
 * **access_token**: get an OpenID-Connect `access_token`
 * **id_token**: get an OpenID-Connect `id_token`
 * **refresh_token**: get an OpenID-Connect `refresh_token`
-* **user_info**: get OpenID-Connect response to `/userinfo` query _(JSON)_
+* **user_info**: get OpenID-Connect response to `/userinfo` query _(JSON)_. If
+  no `access_token` is given in parameters, will query a new one using `getOidcTokens()`
+* **introspection**: get OpenID-Connect response to `/introspect` query _(JSON)_. If
+  no `access_token` is given in parameters, will query a new one using `getOidcTokens()`
 
 ## Options
 
