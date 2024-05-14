@@ -28,8 +28,8 @@ $ llng <options> <command> <parameters>
     new one using `getOidcTokens()`
   * **matrix_token_exchange** _(experimental)_: ask for tokens using a Matrix
     federation `access_token`. Arguments:
-    - **Matrix token** _(required)_: a "federation" access\_token given by
-      [/\_matrix/client/v3/user/@user:domain.tld/openid/request\_token](https://spec.matrix.org/latest/client-server-api/#openid)
+    - **Matrix token** _(required)_: a "federation" `access_token` given by
+      [`/_matrix/client/v3/user/@user:domain.tld/openid/request_token`](https://spec.matrix.org/latest/client-server-api/#openid)
     - **Subject issuer** _(required)_: the Matrix "server name"
     - **Audience** _(optional)_: the `client_id` of requested relying party
 
@@ -59,11 +59,18 @@ file. Then you'll have these functions, corresponding to the different commands:
 * **llng_connect**: establish LLNG connexion _(== get a valid cookie)_
 * **getLanguages**
 * **getLlngId**
+* **getOidcMetadata**
+* **getOidcEndpoints**
+* PKCE:
+  * *getCodeVerifier*
+  * *getCodeChallenge*
 * **getOidcTokens**
 * **getAccessToken**
 * **getIdToken**
 * **getRefreshToken**
 * **getUserInfo**
+* **getIntrospection**
+* **getAccessTokenFromMatrixToken**
 
 ## License and copyright
 
