@@ -126,7 +126,37 @@ getLlngId () {
 
 # 2. OIDC
 
-# 2.1 PKCE
+_oidcmetadata () {
+	client -f "${LLNG_URL}/.well-known/openid-configuration"
+}
+
+getOidcMetadata () {
+	TMP=$(client -Sf "${LLNG_URL}/.well-known/openid-configuration")
+	if test "$TMP" != ''; then
+		echo $TMP | jq -S
+	else
+		exit 1
+	fi
+}
+
+getOidcEndpoints () {
+	TMP=$(_oidcmetadata || true)
+	if test "$TMP" = ""; then
+		export AUTHZ_ENDPOINT="${LLNG_URL}/oauth2/authorize"
+		export TOKEN_ENDPOINT="${LLNG_URL}/oauth2/token"
+		export ENDSESSION_ENDPOINT="${LLNG_URL}/oauth2/logout"
+		export USERINFO_ENDPOINT="${LLNG_URL}/oauth2/userinfo"
+		export INTROSPECTION_ENDPOINT="${LLNG_URL}/oauth2/introspect"
+	else
+		export AUTHZ_ENDPOINT=$(echo $TMP | jq -r .authorization_endpoint)
+		export TOKEN_ENDPOINT=$(echo $TMP | jq -r .token_endpoint)
+		export ENDSESSION_ENDPOINT=$(echo $TMP | jq -r .end_session_endpoint)
+		export USERINFO_ENDPOINT=$(echo $TMP | jq -r .userinfo_endpoint)
+		export INTROSPECTION_ENDPOINT=$(echo $TMP | jq -r .introspection_endpoint)
+	fi
+}
+
+# 2.2 PKCE
 getCodeVerifier () {
 	tr -dc A-Za-z0-9 </dev/urandom | head -c 13
 }
@@ -136,6 +166,9 @@ getCodeChallenge () {
 }
 
 _queryToken () {
+	if test "$AUTHZ_ENDPOINT" = "" -o "$TOKEN_ENDPOINT" = ""; then
+		getOidcEndpoints
+	fi
 	if test "$LLNG_CONNECTED" != 1; then
 		llng_connect
 	fi
@@ -151,8 +184,8 @@ _queryToken () {
 		REDIRECT_URI=$(askString 'Redirect URI')
 	fi
 	REDIRECT_URI=redirect_uri=$(uri_escape "$REDIRECT_URI")
-	SCOPE=scope=$(uri_escape "${SCOPE}")
-	TMP="${LLNG_URL}/oauth2/authorize?client_id=${CLIENT_ID}&${REDIRECT_URI}&response_type=code&${SCOPE}${CODE_CHALLENGE}"
+	_SCOPE=scope=$(uri_escape "${SCOPE}")
+	TMP="${AUTHZ_ENDPOINT}?client_id=${CLIENT_ID}&${REDIRECT_URI}&response_type=code&${_SCOPE}${CODE_CHALLENGE}"
 	_CODE=$(clientWeb -i $TMP | grep -i "^Location:" | sed -e "s/^.*code=//;s/&.*$//;s/\r//g")
 	if test "$_CODE" = ""; then
 		echo "Unable to get OIDC CODE, check your parameters" >&2
@@ -164,11 +197,11 @@ _queryToken () {
 	RAWTOKENS=$(client -XPOST -SsL -d "client_id=${CLIENT_ID}" \
 		-d 'grant_type=authorization_code' \
 		-d "$REDIRECT_URI" \
-		-d "$SCOPE" \
+		-d "$_SCOPE" \
 		$CODE_VERIFIER \
 		$AUTHZ \
 		--data-urlencode "code=$_CODE" \
-		"${LLNG_URL}/oauth2/token")
+		"$TOKEN_ENDPOINT")
 	if echo "$RAWTOKENS" | grep access_token >/dev/null 2>&1; then
 		LLNG_ACCESS_TOKEN=$(echo "$RAWTOKENS" | jq -r .access_token)
 	else
@@ -188,7 +221,7 @@ getOidcTokens () {
 	if test "$RAWTOKENS" = ''; then
 		_queryToken
 	fi
-	echo $RAWTOKENS
+	echo $RAWTOKENS | jq -S
 }
 
 getAccessToken () {
@@ -218,7 +251,7 @@ getUserInfo () {
 		_queryToken
 		TOKEN="$LLNG_ACCESS_TOKEN"
 	fi
-	client -H "Authorization: Bearer $TOKEN"  "${LLNG_URL}/oauth2/userinfo" | jq -S
+	client -H "Authorization: Bearer $TOKEN"  "$USERINFO_ENDPOINT" | jq -S
 }
 
 getIntrospection () {
@@ -228,5 +261,29 @@ getIntrospection () {
 		TOKEN="$LLNG_ACCESS_TOKEN"
 	fi
 	AUTHZ=$(_authz)
-	client $AUTHZ -d "token=$TOKEN" "${LLNG_URL}/oauth2/introspect" | jq -S
+	client $AUTHZ -d "token=$TOKEN" "$INTROSPECTION_ENDPOINT" | jq -S
+}
+
+getAccessTokenFromMatrixToken () {
+	MATRIX_TOKEN="$1"
+	SUBJECT_ISSUER="$2"
+	AUDIENCE="$3"
+	_SCOPE=scope=$(uri_escape "${SCOPE}")
+	if test "$MATRIX_TOKEN" = "" -o "$SUBJECT_ISSUER" = ""; then
+		echo "Missing parameter" >&2
+		exit 1
+	fi
+	if test "$TOKEN_ENDPOINT" = ""; then
+		getOidcEndpoints
+	fi
+	AUTHZ=$(_authz)
+	client -XPOST -fSsL \
+		$AUTHZ \
+		-d 'grant_type=urn:ietf:params:oauth:grant-type:token-exchange' \
+		-d "client_id=$CLIENT_ID" \
+		--data-urlencode "subject_token=$MATRIX_TOKEN" \
+		-d "$_SCOPE" \
+		--data-urlencode "subject_issuer=$SUBJECT_ISSUER" \
+		--data-urlencode "audience=$AUDIENCE" \
+		"$TOKEN_ENDPOINT" | jq -S
 }

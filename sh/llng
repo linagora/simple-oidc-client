@@ -133,6 +133,13 @@ case "$COMMAND" in
 	llng_cookie)
 		getLlngId
 		;;
+	oidc_metadata)
+		getOidcMetadata
+		;;
+	oidc_endpoints)
+		getOidcEndpoints
+		env|grep _ENDPOINT
+		;;
 	oidc_tokens)
 		getOidcTokens
 		;;
@@ -150,6 +157,9 @@ case "$COMMAND" in
 		;;
 	introspection)
 		getIntrospection "$@"
+		;;
+	matrix_token_exchange)
+		getAccessTokenFromMatrixToken "$@"
 		;;
 	*)
 		echo "BAD COMMAND $COMMAND" >&2

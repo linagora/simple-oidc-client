@@ -13,14 +13,21 @@ $ llng <options> <command> <parameters>
 * **whoami**: simply return your id
 * **languages**: get supported languages _(JSON)_
 * **llng_cookie**: get LLNG cookie
-* **oidc_tokens**: get the raw response of OIDC `/token` query _(JSON)_
-* **access_token**: get an OpenID-Connect `access_token`
-* **id_token**: get an OpenID-Connect `id_token`
-* **refresh_token**: get an OpenID-Connect `refresh_token`
-* **user_info**: get OpenID-Connect response to `/userinfo` query _(JSON)_. If
-  no `access_token` is given in parameters, will query a new one using `getOidcTokens()`
-* **introspection**: get OpenID-Connect response to `/introspect` query _(JSON)_. If
-  no `access_token` is given in parameters, will query a new one using `getOidcTokens()`
+* OpenID-Connect commands:
+  * **oidc_metadata**: get OpenID-Connect metadata
+  * **oidc_endpoints**: get OpenID-Connect endpoints _(from metadata)_
+  * **oidc_tokens**: get the raw response of OIDC `/token` query _(JSON)_
+  * **access_token**: get an OpenID-Connect `access_token`
+  * **id_token**: get an OpenID-Connect `id_token`
+  * **refresh_token**: get an OpenID-Connect `refresh_token`
+  * **user_info**: get OpenID-Connect response to `/userinfo` query _(JSON)_.
+    If no `access_token` is given in parameters, will query a new one using
+    `getOidcTokens()`
+  * **introspection**: get OpenID-Connect response to `/introspect`
+    query _(JSON)_. If no `access_token` is given in parameters, will query a
+    new one using `getOidcTokens()`
+  * **matrix_token_exchange** _(experimental)_: ask for tokens using a Matrix
+    federation `access_token`
 
 ## Options
 
@@ -29,7 +36,8 @@ You'll be prompted for any missing option
 * **--cookie-jar**: where to store LLNG sessions. Default: `~/.cache/llng-cookies`
 * **--login**: your LLNG login
 * **--password**: your LLNG password
-* **--llng-server**: LLNG portal hostname _(with :port)_, used to calculate **--llng-url** if not given. Default: `localhost:19876`
+* **--llng-server**: LLNG portal hostname _(with :port)_, used to calculate
+  **--llng-url** if not given. Default: `localhost:19876`
 * **--llng-url**: LLNG portal URL. Default: `https://<value of --llng-server>`
 
 OpenID-Connect options:
