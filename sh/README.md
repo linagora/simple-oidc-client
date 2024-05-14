@@ -27,7 +27,11 @@ $ llng <options> <command> <parameters>
     query _(JSON)_. If no `access_token` is given in parameters, will query a
     new one using `getOidcTokens()`
   * **matrix_token_exchange** _(experimental)_: ask for tokens using a Matrix
-    federation `access_token`
+    federation `access_token`. Arguments:
+    - **Matrix token** _(required)_: a "federation" access\_token given by
+      [/\_matrix/client/v3/user/@user:domain.tld/openid/request\_token](https://spec.matrix.org/latest/client-server-api/#openid)
+    - **Subject issuer** _(required)_: the Matrix "server name"
+    - **Audience** _(optional)_: the `client_id` of requested relying party
 
 ## Options
 
