@@ -26,25 +26,25 @@ $ llng <options> <command> <parameters>
   * **introspection**: get OpenID-Connect response to `/introspect`
     query _(JSON)_. If no `access_token` is given in parameters, will query a
     new one using `getOidcTokens()`
-  * **matrix_token_exchange** _(experimental)_: ask for tokens using a Matrix
-    federation `access_token`. Arguments:
-    - **Matrix token** _(required)_: a "federation" `access_token` given by
-      [`/_matrix/client/v3/user/@user:domain.tld/openid/request_token`](https://spec.matrix.org/latest/client-server-api/#openid)
-    - **Subject issuer** _(required)_: the Matrix "server name"
-    - **Audience** _(optional)_: the `client_id` of requested relying party
 * Experimental commands:
   * **matrix_token**: get a Matrix `access_token` from a Matrix server
     connected to LLNG using OpenID-Connect
   * **matrix_federation_token**: get a Matrix federation `access_token`.
     if no Matrix token is given in arguments, call **matrix_token** to get
     an internal `access_token`.
+  * **matrix_token_exchange** _(experimental)_: ask for tokens using a Matrix
+    federation `access_token`. Arguments:
+    - **Matrix token** _(required)_: a "federation" `access_token` given by
+      [`/_matrix/client/v3/user/@user:domain.tld/openid/request_token`](https://spec.matrix.org/latest/client-server-api/#openid)
+    - **Subject issuer** _(required)_: the Matrix "server name"
+    - **Audience** _(optional)_: the `client_id` of requested relying party
 
 ## Options
 
 You'll be prompted for any missing option
 
 * **--cookie-jar**: where to store LLNG sessions. Default: `~/.cache/llng-cookies`
-* **--login**: your LLNG login
+* **--login**: your LLNG login _(alias: **--user**)_
 * **--password**: your LLNG password
 * **--llng-server**: LLNG portal hostname _(with :port)_, used to calculate
   **--llng-url** if not given. Default: `localhost:19876`
@@ -60,7 +60,7 @@ OpenID-Connect options:
 Experimental options:
 * Matrix queries
   * **--matrix-server**: Matrix server
-  * **--matrix-user**: Matrix address _(default: `@${--login value}:${domain of --llng-server}`
+  * **--matrix-user**: Matrix address _(default: `@<value of --login>:<domain of --llng-server>`
 
 ## Using this inside a shell program
 
@@ -73,8 +73,8 @@ file. Then you'll have these functions, corresponding to the different commands:
 * **getOidcMetadata**
 * **getOidcEndpoints**
 * PKCE:
-  * *getCodeVerifier*
-  * *getCodeChallenge*
+  * **getCodeVerifier**
+  * **getCodeChallenge**
 * **getOidcTokens**
 * **getAccessToken**
 * **getIdToken**
