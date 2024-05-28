@@ -21,7 +21,7 @@ check_install
 
 # 1. GET PARAMETERS
 
-TEMP=$(getopt -o 'c:u:Pp:H:ki:s:r:vh' --long 'cookie-jar:,login:,user:,password:,prompt,llng-url:,llng-server:,pkce,client-id:,client-secret:,redirect-uri:,scope:,help,version,matrix-server:' -- "$@")
+TEMP=$(getopt -o 'c:u:Pp:H:ki:s:r:vh' --long 'cookie-jar:,login:,user:,password:,prompt,llng-url:,llng-server:,pkce,client-id:,client-secret:,redirect-uri:,scope:,help,version,matrix-server:,matrix-user:' -- "$@")
 
 if [ $? -ne 0 ]; then
         echo 'Terminating...' >&2
