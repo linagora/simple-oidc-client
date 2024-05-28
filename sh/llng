@@ -21,7 +21,7 @@ check_install
 
 # 1. GET PARAMETERS
 
-TEMP=$(getopt -o 'c:u:Pp:H:ki:s:r:vh' --long 'cookie-jar:,login:,password:,prompt,llng-url:,llng-server:,pkce,client-id:,client-secret:,redirect-uri:,scope:,help,version' -- "$@")
+TEMP=$(getopt -o 'c:u:Pp:H:ki:s:r:vh' --long 'cookie-jar:,login:,user:,password:,prompt,llng-url:,llng-server:,pkce,client-id:,client-secret:,redirect-uri:,scope:,help,version,matrix-server:' -- "$@")
 
 if [ $? -ne 0 ]; then
         echo 'Terminating...' >&2
@@ -92,6 +92,14 @@ while true; do
 			SCOPE="$2"
 			shift 2
 			;;
+		'--matrix-server')
+			MATRIX_SERVER="$2"
+			shift 2
+			;;
+		'--matrix-user')
+			MATRIX_USER="$2"
+			shift 2
+			;;
 		'--')
                         shift
                         break
@@ -157,6 +165,12 @@ case "$COMMAND" in
 		;;
 	introspection)
 		getIntrospection "$@"
+		;;
+	matrix_token)
+		getMatrixToken "$@"
+		;;
+	matrix_federation_token)
+		getMatrixFederationToken "$@"
 		;;
 	matrix_token_exchange)
 		getAccessTokenFromMatrixToken "$@"

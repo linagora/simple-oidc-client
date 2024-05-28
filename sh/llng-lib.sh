@@ -264,6 +264,65 @@ getIntrospection () {
 	client $AUTHZ -d "token=$TOKEN" "$INTROSPECTION_ENDPOINT" | jq -S
 }
 
+_getMatrixToken () {
+	if test "$MATRIX_SERVER" = ""; then
+		MATRIX_SERVER=$(askString 'Matrix server')
+	fi
+	MATRIX_URL=${MATRIX_URL:-https://$MATRIX_SERVER}/_matrix/client
+	if test "$MATRIX_TOKEN" = ""; then
+		PROVIDER=$(client $MATRIX_URL/v3/login | jq -r .flows[0].identity_providers[0].id)
+		if test "$LLNG_CONNECTED" != 1; then
+			llng_connect
+		fi
+		_CONTENT=$(client -i --location "$MATRIX_URL/r0/login/sso/redirect/$PROVIDER?redirectUrl=http%3A%2F%2Flocalhost%3A9876")
+		_LOGIN_TOKEN=$(echo $_CONTENT|perl -ne 'print $1 if/loginToken=(.*?)"/')
+		if test "$_LOGIN_TOKEN" = ""; then
+			echo "Unable to get matrix login_token" >&2
+			echo $_CONTENT >&2
+			exit 1
+		fi
+		_CONTENT=$(client -XPOST -d '{"initial_device_display_name":"Shell Test Client","token":"'"$_LOGIN_TOKEN"'","type":"m.login.token"}' "$MATRIX_URL/v3/login")
+		MATRIX_TOKEN=$(echo $_CONTENT | jq -r .access_token)
+		if test "$MATRIX_TOKEN" = "" -o "$MATRIX_TOKEN" = "null"; then
+			echo "Unable to get matrix_token" >&2
+			echo $_CONTENT >&2
+			exit 1
+		fi
+	fi
+}
+
+getMatrixToken () {
+	if test "$MATRIX_TOKEN" = ""; then
+		_getMatrixToken
+	fi
+	echo $MATRIX_TOKEN
+}
+
+_getMatrixFederationToken () {
+	if test "$MATRIX_SERVER" = ""; then
+		MATRIX_SERVER=$(askString 'Matrix server')
+	fi
+	MATRIX_URL=${MATRIX_URL:-https://$MATRIX_SERVER}/_matrix/client
+	MATRIX_TOKEN=${1:-$MATRIX_TOKEN}
+	if test "$MATRIX_USER" = ""; then
+		if test "$LLNG_LOGIN" = ""; then
+			MATRIX_USER=$(askString 'Matrix username')
+		else
+			MATRIX_USER=@$LLNG_LOGIN:$(echo $LLNG_SERVER | perl -pe 's/.*?\.//')
+		fi
+	fi
+	if test "$MATRIX_TOKEN" = ""; then
+		_getMatrixToken
+	fi
+	_CONTENT=$(client -XPOST -H "Authorization: Bearer $MATRIX_TOKEN" -d '{}' "$MATRIX_URL/v3/user/$MATRIX_USER/openid/request_token")
+	MATRIX_FEDERATION_TOKEN=$(echo $_CONTENT | jq -r .access_token)
+}
+
+getMatrixFederationToken () {
+	_getMatrixFederationToken "$@"
+	echo $MATRIX_FEDERATION_TOKEN
+}
+
 getAccessTokenFromMatrixToken () {
 	MATRIX_TOKEN="$1"
 	SUBJECT_ISSUER="$2"

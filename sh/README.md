@@ -32,6 +32,12 @@ $ llng <options> <command> <parameters>
       [`/_matrix/client/v3/user/@user:domain.tld/openid/request_token`](https://spec.matrix.org/latest/client-server-api/#openid)
     - **Subject issuer** _(required)_: the Matrix "server name"
     - **Audience** _(optional)_: the `client_id` of requested relying party
+* Experimental commands:
+  * **matrix_token**: get a Matrix `access_token` from a Matrix server
+    connected to LLNG using OpenID-Connect
+  * **matrix_federation_token**: get a Matrix federation `access_token`.
+    if no Matrix token is given in arguments, call **matrix_token** to get
+    an internal `access_token`.
 
 ## Options
 
@@ -50,6 +56,11 @@ OpenID-Connect options:
   * **--client_secret**: the application secret _(if client isn't "public")_
 * **--redirect-uri**: one authorized redirect uri of the OpenID-Connect application
 * **--scope**: the wanted scope. Default: `openid profile email`
+
+Experimental options:
+* Matrix queries
+  * **--matrix-server**: Matrix server
+  * **--matrix-user**: Matrix address _(default: `@${--login value}:${domain of --llng-server}`
 
 ## Using this inside a shell program
 
@@ -71,6 +82,8 @@ file. Then you'll have these functions, corresponding to the different commands:
 * **getUserInfo**
 * **getIntrospection**
 * **getAccessTokenFromMatrixToken**
+* **getMatrixToken**
+* **getMatrixFederationToken**
 
 ## License and copyright
 
