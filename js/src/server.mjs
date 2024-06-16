@@ -240,7 +240,3 @@ new Promise((resolve, reject) => {
   console.error('Unable to initialize client', e);
   process.exit(1);
 })
-
-
-
-
