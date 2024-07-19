@@ -79,6 +79,11 @@ while true; do
 			REDIRECT_URI="$2"
 			shift 2
 			;;
+		'--debug')
+			DEBUG=1
+			echo "XXXX"
+			shift
+			;;
 		'-o'|'--scope')
 			SCOPE="$2"
 			shift 2
