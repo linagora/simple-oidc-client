@@ -23,6 +23,7 @@ let alg = 'RS512'
 let redirectUri = '';
 let clientId = '';
 let clientSecret = '';
+let pkce = 0;
 
 const returnError = (res) => {
   return err => {
@@ -46,12 +47,17 @@ app.get('/', (req, res) => {
   }
   code_verifier = generators.codeVerifier();
   const code_challenge = generators.codeChallenge(code_verifier);
-  const url = client.authorizationUrl({
+  const _opts = {
     scope: scopes,
-    resource: 'https://my.api.example.com/resource/32178',
-    code_challenge,
-    code_challenge_method: 'S256',
-  });
+    //resource: 'https://my.api.example.com/resource/32178',
+  };
+  if (pkce) {
+    console.info('PKCE is set');
+    _opts.code_challenge = code_challenge;
+    _opts.code_challenge_method = 'S256';
+  }
+  console.debug('ARGS', _opts);
+  const url = client.authorizationUrl(_opts);
   if (req.query && req.query.auto != undefined) {
     res.redirect(url);
   } else {
@@ -59,10 +65,12 @@ app.get('/', (req, res) => {
       <title>Start OIDC</title>
       <body>
         Ready to launch OIDC authorization flow
+        ${pkce ? `
         <ul>
           <li>Code: ${code_challenge}</li>
           <li>Scopes: ${scopes}</li>
         </ul>
+        ` : ''}
         <a href="${url}">Let's go!</a>
       </body>
     </html>`);
@@ -73,10 +81,11 @@ const back = (req, res) => {
   const rt = returnError(res)
   try {
     const params = client.callbackParams(req);
-    client.callback(
-      urlBack,
-      params, { code_verifier }
-    ).then( tokenSet => {
+    const args = [urlBack];
+    console.log('Token args', args);
+    if (pkce) args.push({ code_verifier });
+    client.callback(...args)
+    .then( tokenSet => {
       // keys: refresh_token, id_token, token_type, access_token expires_at, session_state
       const access_token = tokenSet.access_token;
       const id_token = tokenSet.id_token;
@@ -116,6 +125,7 @@ app.get('/config', (req, res) => {
         <tr><td>Scopes</td><td><input name="scopes" value="${scopes}" /></td></tr>
         <tr><td>Algorithm</td><td><input name="alg" value="${alg}" /></td></tr>
         <tr><td>Opaque token</td><td><input name="opaque" value="${opaque}" /></td></tr>
+        <tr><td>PKCE</td><td><input name="pkce" value="${pkce}" /></td></tr>
       </tbody></table>
       <input type="submit" value="OK">
     </form>
@@ -126,7 +136,7 @@ app.get('/config', (req, res) => {
 app.post('/config', (req, res) => {
   const rt = returnError(res)
   const body = req.body;
-  discover(body.issuer, body.clientid, body.clientsecret, body.redirecturi, body.alg, body.scopes, body.opaque)
+  discover(body.issuer, body.clientid, body.clientsecret, body.redirecturi, body.alg, body.scopes, body.opaque, body.pkce)
     .then( () => {
       res.send(`<html>
         <title>Config</title>
@@ -154,7 +164,7 @@ app.get('*', (req, res) => {
   </html>`);
 });
 
-const discover = async (_issuerUrl, client_id, client_secret, redir, id_token_signed_response_alg, _scopes, _opaque) => {
+const discover = async (_issuerUrl, client_id, client_secret, redir, id_token_signed_response_alg, _scopes, _opaque, _pkce) => {
   const issuer = await Issuer.discover(_issuerUrl);
   issuerUrl = _issuerUrl;
   clientId = client_id;
@@ -162,6 +172,7 @@ const discover = async (_issuerUrl, client_id, client_secret, redir, id_token_si
   alg = id_token_signed_response_alg;
   scopes = _scopes;
   opaque = _opaque;
+  pkce = _pkce;
   redirectUri = redir;
   urlBack = redir;
   uriBack = redir.replace(/^https?:\/\/[^/]+/, '');
@@ -173,7 +184,7 @@ const discover = async (_issuerUrl, client_id, client_secret, redir, id_token_si
     redirect_uris: [redir],
     id_token_signed_response_alg,
   });
-  console.log('OIDC client created');
+  console.error('PKCE', [_pkce,pkce]);
 }
 
 // console.log(yargs(hideBin(process.argv)).argv);
@@ -219,6 +230,11 @@ const argv = yargs(hideBin(process.argv))
     describe: 'Access token is opaque',
     default: false,
   })
+  .option('pkce', {
+    type: 'boolean',
+    describe: 'Use PKCE',
+    default: false,
+  })
   .argv;
 
 new Promise((resolve, reject) => {
@@ -227,7 +243,7 @@ new Promise((resolve, reject) => {
       console.error('Need --client-id and --client-secret and --redirect-uri and --issuer');
       process.exit(1);
     }
-    discover(argv.issuer, argv.clientId, argv.clientSecret, argv.redirectUri, argv.alg, argv.scopes, (argv.opaque ? 1 : 0))
+    discover(argv.issuer, argv.clientId, argv.clientSecret, argv.redirectUri, argv.alg, argv.scopes, (argv.opaque ? 1 : 0), (argv.pkce ? 1 : 0))
     .then(resolve)
     .catch(reject)
   } else {
