@@ -32,7 +32,7 @@ client () {
 		echo '> ' curl -sk --user-agent \'LLNG-CLient/2.20.0\' --cookie \"$COOKIEJAR\" \
 			--cookie-jar \"$COOKIEJAR\" -H \"Accept: application/json\" \"$@\" >&2
 	fi
-	curl -sk --user-agent 'LLNG-CLient/2.20.0' --cookie "$COOKIEJAR" \
+	curl -s $CURLOPTS --user-agent 'LLNG-CLient/2.20.0' --cookie "$COOKIEJAR" \
 		--cookie-jar "$COOKIEJAR" -H "Accept: application/json" "$@"
 }
 
@@ -42,7 +42,7 @@ clientWeb () {
 		echo '> ' curl -sk --user-agent \'LLNG-CLient/2.20.0\' --cookie \"$COOKIEJAR\" \
 			--cookie-jar \"$COOKIEJAR\" -H \"Accept: test/html\" \"$@\" >&2
 	fi
-	curl -sk --user-agent 'LLNG-CLient/2.20.0' --cookie "$COOKIEJAR" \
+	curl -s $CURLOPTS --user-agent 'LLNG-CLient/2.20.0' --cookie "$COOKIEJAR" \
 		--cookie-jar "$COOKIEJAR" -H "Accept: test/html" "$@"
 }
 
@@ -100,7 +100,10 @@ llng_connect () {
 			TOKEN="--data-urlencode token="$( echo "$TMP" | jq -r  ".token" )
 		fi
 	
-		TMP=$(client -XPOST --data-urlencode "user=$LLNG_LOGIN" --data-urlencode "password=$LLNG_PASSWORD" $TOKEN $LLNG_URL)
+		if test "$LLNG_CHOICE" != ''; then
+			LLNG_CHOICE="--data-urlencode $LLNG_CHOICE"
+		fi
+		TMP=$(client -XPOST --data-urlencode "user=$LLNG_LOGIN" --data-urlencode "password=$LLNG_PASSWORD" $LLNG_CHOICE $TOKEN $LLNG_URL)
 		ID=''
 		if echo "$TMP" | jq -r ".id" >/dev/null 2>&1; then
 			LLNG_CONNECTED=1
@@ -192,6 +195,9 @@ _queryToken () {
 		REDIRECT_URI=$(askString 'Redirect URI')
 	fi
 	REDIRECT_URI=redirect_uri=$(uri_escape "$REDIRECT_URI")
+	if test "$DEBUG" = 1; then
+		echo "Scope: $SCOPE"
+	fi
 	_SCOPE=scope=$(uri_escape "${SCOPE}")
 	TMP="${AUTHZ_ENDPOINT}?client_id=${CLIENT_ID}&${REDIRECT_URI}&response_type=code&${_SCOPE}${CODE_CHALLENGE}"
 	_CODE=$(clientWeb -i $TMP | grep -i "^Location:" | sed -e "s/^.*code=//;s/&.*$//;s/\r//g")
@@ -335,6 +341,9 @@ getAccessTokenFromMatrixToken () {
 	MATRIX_TOKEN="$1"
 	SUBJECT_ISSUER="$2"
 	AUDIENCE="$3"
+	if test "$DEBUG" = 1; then
+		echo "Scope: $SCOPE"
+	fi
 	_SCOPE=scope=$(uri_escape "${SCOPE}")
 	if test "$MATRIX_TOKEN" = "" -o "$SUBJECT_ISSUER" = ""; then
 		echo "Missing parameter" >&2

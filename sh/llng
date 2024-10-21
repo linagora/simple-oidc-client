@@ -95,6 +95,14 @@ while true; do
 			MATRIX_USER="$2"
 			shift 2
 			;;
+		'--curl-opts')
+			CURLOPTS="$2"
+			shift 2
+			;;
+		'--choice')
+			LLNG_CHOICE="$2"
+			shift 2
+			;;
 		'--')
                         shift
                         break
