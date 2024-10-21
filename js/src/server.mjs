@@ -23,7 +23,7 @@ let alg = 'RS512'
 let redirectUri = '';
 let clientId = '';
 let clientSecret = '';
-let pkce = 0;
+let pkce = false;
 
 const returnError = (res) => {
   return err => {
@@ -42,6 +42,9 @@ const returnError = (res) => {
  */
 
 app.get('/', (req, res) => {
+  if (req.query.openidconnectcallback) {
+    return back(req,res)
+  }
   if (!client) {
     return res.redirect('/config');
   }
@@ -52,7 +55,7 @@ app.get('/', (req, res) => {
     //resource: 'https://my.api.example.com/resource/32178',
   };
   if (pkce) {
-    console.info('PKCE is set');
+    console.info('PKCE is set', pkce);
     _opts.code_challenge = code_challenge;
     _opts.code_challenge_method = 'S256';
   }
@@ -81,9 +84,10 @@ const back = (req, res) => {
   const rt = returnError(res)
   try {
     const params = client.callbackParams(req);
-    const args = [urlBack];
-    console.log('Token args', args);
+    console.log('Received parameters', params)
+    const args = [urlBack, params];
     if (pkce) args.push({ code_verifier });
+    console.log('POST PARAMS', args)
     client.callback(...args)
     .then( tokenSet => {
       // keys: refresh_token, id_token, token_type, access_token expires_at, session_state
@@ -172,7 +176,7 @@ const discover = async (_issuerUrl, client_id, client_secret, redir, id_token_si
   alg = id_token_signed_response_alg;
   scopes = _scopes;
   opaque = _opaque;
-  pkce = _pkce;
+  pkce = _pkce == 1 ? true : false;
   redirectUri = redir;
   urlBack = redir;
   uriBack = redir.replace(/^https?:\/\/[^/]+/, '');
