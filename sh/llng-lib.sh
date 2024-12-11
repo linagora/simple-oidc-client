@@ -261,6 +261,9 @@ getRefreshToken () {
 
 getUserInfo () {
 	TOKEN=${1:-$LLNG_ACCESS_TOKEN}
+	if test "$USERINFO_ENDPOINT" = ''; then
+		getOidcEndpoints
+	fi
 	if test "$TOKEN" = ''; then
 		_queryToken
 		TOKEN="$LLNG_ACCESS_TOKEN"

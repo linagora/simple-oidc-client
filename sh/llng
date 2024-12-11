@@ -99,6 +99,10 @@ while true; do
 			CURLOPTS="$2"
 			shift 2
 			;;
+		'--access-token')
+			LLNG_ACCESS_TOKEN="$2"
+			shift 2
+			;;
 		'--choice')
 			LLNG_CHOICE="$2"
 			shift 2
