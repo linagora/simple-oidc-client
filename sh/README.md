@@ -13,6 +13,7 @@ $ llng <options> <command> <parameters>
 * **whoami**: simply return your id
 * **languages**: get supported languages _(JSON)_
 * **llng_cookie**: get LLNG cookie
+* **logout**: disconnect
 * OpenID-Connect commands:
   * **oidc_metadata**: get OpenID-Connect metadata
   * **oidc_endpoints**: get OpenID-Connect endpoints _(from metadata)_

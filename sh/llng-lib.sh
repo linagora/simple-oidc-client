@@ -135,6 +135,10 @@ getLlngId () {
 	client -lv "${LLNG_URL}/session/my/?whoami" 2>&1 | grep -E '> *Cookie' | sed -e 's/.*Cookie: *//'
 }
 
+logout () {
+	client "${LLNG_URL}/?logout=1" | grep -E '"result": *1' >/dev/null
+}
+
 # 2. OIDC
 
 _oidcmetadata () {
