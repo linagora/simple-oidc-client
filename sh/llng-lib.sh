@@ -77,14 +77,14 @@ llng_connect () {
 	LLNG_CONNECTED=0
 	if client -f $LLNG_URL >/dev/null 2>&1; then
 		LLNG_CONNECTED=1
-	
+
 	# else try to authenticate
 	else
 		if test "$LLNG_LOGIN" = ""
 		then
 			LLNG_LOGIN=$(askString Login)
 		fi
-		
+
 		if test "$PROMPT" = yes -o "$LLNG_PASSWORD" = ""
 		then
 			stty -echo
@@ -92,14 +92,14 @@ llng_connect () {
 			stty echo
 			echo
 		fi
-	
+
 		# Test if token is required
 		TMP=$(client $LLNG_URL 2>/dev/null)
 		TOKEN=''
 		if echo "$TMP" | jq -r  ".token" >/dev/null 2>&1; then
 			TOKEN="--data-urlencode token="$( echo "$TMP" | jq -r  ".token" )
 		fi
-	
+
 		if test "$LLNG_CHOICE" != ''; then
 			LLNG_CHOICE="--data-urlencode $LLNG_CHOICE"
 		fi
@@ -185,41 +185,52 @@ _queryToken () {
 		getOidcEndpoints
 	fi
 	if test "$LLNG_CONNECTED" != 1; then
-		llng_connect
+		set -e
+		if test "$LLNG_REFRESH_TOKEN" != ''; then
+			RAWTOKENS=$(client -XPOST \
+				-d 'grant_type=refresh_token' \
+				--data-urlencode "client_id=${CLIENT_ID}" \
+				--data-urlencode "refresh_token=$LLNG_REFRESH_TOKEN" \
+				"$TOKEN_ENDPOINT")
+		else
+			llng_connect
+		fi
 	fi
-	CODE_VERIFIER=''
-	CODE_CHALLENGE=''
-	if test "$PKCE" = 1; then
-		CODE_VERIFIER=$(getCodeVerifier)
-		CODE_CHALLENGE='&code_challenge_method=S256&code_challenge='$(getCodeChallenge $CODE_VERIFIER)
-		CODE_VERIFIER="-d code_verifier="$(uri_escape $CODE_VERIFIER)
-	fi
-	AUTHZ=$(_authz)
-	if test "$REDIRECT_URI" = ""; then
-		REDIRECT_URI=$(askString 'Redirect URI')
-	fi
-	REDIRECT_URI=redirect_uri=$(uri_escape "$REDIRECT_URI")
-	if test "$DEBUG" = 1; then
-		echo "Scope: $SCOPE"
-	fi
-	_SCOPE=scope=$(uri_escape "${SCOPE}")
-	TMP="${AUTHZ_ENDPOINT}?client_id=${CLIENT_ID}&${REDIRECT_URI}&response_type=code&${_SCOPE}${CODE_CHALLENGE}"
-	_CODE=$(clientWeb -i $TMP | grep -i "^Location:" | sed -e "s/^.*code=//;s/[#&].*$//;s/\r//g")
-	if test "$_CODE" = ""; then
-		echo "Unable to get OIDC CODE, check your parameters" >&2
-		echo "Tried with: $TMP" >&2
-		exit 2
-	fi
+	if test "$RAWTOKENS" = ''; then
+		CODE_VERIFIER=''
+		CODE_CHALLENGE=''
+		if test "$PKCE" = 1; then
+			CODE_VERIFIER=$(getCodeVerifier)
+			CODE_CHALLENGE='&code_challenge_method=S256&code_challenge='$(getCodeChallenge $CODE_VERIFIER)
+			CODE_VERIFIER="-d code_verifier="$(uri_escape $CODE_VERIFIER)
+		fi
+		AUTHZ=$(_authz)
+		if test "$REDIRECT_URI" = ""; then
+			REDIRECT_URI=$(askString 'Redirect URI')
+		fi
+		REDIRECT_URI=redirect_uri=$(uri_escape "$REDIRECT_URI")
+		if test "$DEBUG" = 1; then
+			echo "Scope: $SCOPE"
+		fi
+		_SCOPE=scope=$(uri_escape "${SCOPE}")
+		TMP="${AUTHZ_ENDPOINT}?client_id=${CLIENT_ID}&${REDIRECT_URI}&response_type=code&${_SCOPE}${CODE_CHALLENGE}"
+		_CODE=$(clientWeb -i $TMP | grep -i "^Location:" | sed -e "s/^.*code=//;s/[#&].*$//;s/\r//g")
+		if test "$_CODE" = ""; then
+			echo "Unable to get OIDC CODE, check your parameters" >&2
+			echo "Tried with: $TMP" >&2
+			exit 2
+		fi
 
-	# Get access token
-	RAWTOKENS=$(client -XPOST -SsL -d "client_id=${CLIENT_ID}" \
-		-d 'grant_type=authorization_code' \
-		-d "$REDIRECT_URI" \
-		-d "$_SCOPE" \
-		$CODE_VERIFIER \
-		$AUTHZ \
-		--data-urlencode "code=$_CODE" \
-		"$TOKEN_ENDPOINT")
+		# Get access token
+		RAWTOKENS=$(client -XPOST -SsL -d "client_id=${CLIENT_ID}" \
+			-d 'grant_type=authorization_code' \
+			-d "$REDIRECT_URI" \
+			-d "$_SCOPE" \
+			$CODE_VERIFIER \
+			$AUTHZ \
+			--data-urlencode "code=$_CODE" \
+			"$TOKEN_ENDPOINT")
+	fi
 	if echo "$RAWTOKENS" | grep access_token >/dev/null 2>&1; then
 		LLNG_ACCESS_TOKEN=$(echo "$RAWTOKENS" | jq -r .access_token)
 	else
@@ -277,6 +288,10 @@ getUserInfo () {
 
 getIntrospection () {
 	TOKEN=${1:-$LLNG_ACCESS_TOKEN}
+	#echo client $AUTHZ -d "token=$TOKEN" "$INTROSPECTION_ENDPOINT"
+	if test "$USERINFO_ENDPOINT" = ''; then
+		getOidcEndpoints
+	fi
 	if test "$TOKEN" = ''; then
 		_queryToken
 		TOKEN="$LLNG_ACCESS_TOKEN"

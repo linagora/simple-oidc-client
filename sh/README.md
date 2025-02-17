@@ -48,8 +48,7 @@ You'll be prompted for any missing option
 * **--login**: your LLNG login _(alias: **--user**)_
 * **--password**: your LLNG password
 * **--llng-server**: LLNG portal hostname _(with :port)_, used to calculate
-  **--llng-url** if not given. Default: `localhost:19876`
-* **--llng-url**: LLNG portal URL. Default: `https://<value of --llng-server>`
+* **--llng-url**: LLNG portal URL. Default: `https://<value of --llng-server>`.
 
 OpenID-Connect options:
 * application credentials:
@@ -57,6 +56,7 @@ OpenID-Connect options:
   * **--client_secret**: the application secret _(if client isn't "public")_
 * **--redirect-uri**: one authorized redirect uri of the OpenID-Connect application
 * **--scope**: the wanted scope. Default: `openid profile email`
+* **--refresh-token**: when given, try to get token using the given refresh\_token
 
 Experimental options:
 * Matrix queries

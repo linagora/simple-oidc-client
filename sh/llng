@@ -103,6 +103,10 @@ while true; do
 			LLNG_ACCESS_TOKEN="$2"
 			shift 2
 			;;
+		'--refresh-token')
+			LLNG_REFRESH_TOKEN="$2"
+			shift 2
+			;;
 		'--choice')
 			LLNG_CHOICE="$2"
 			shift 2
@@ -171,7 +175,7 @@ case "$COMMAND" in
 		getRefreshToken
 		;;
 	user_info)
-		getUserInfo
+		getUserInfo "$@"
 		;;
 	introspection)
 		getIntrospection "$@"
