@@ -204,7 +204,7 @@ _queryToken () {
 	fi
 	_SCOPE=scope=$(uri_escape "${SCOPE}")
 	TMP="${AUTHZ_ENDPOINT}?client_id=${CLIENT_ID}&${REDIRECT_URI}&response_type=code&${_SCOPE}${CODE_CHALLENGE}"
-	_CODE=$(clientWeb -i $TMP | grep -i "^Location:" | sed -e "s/^.*code=//;s/&.*$//;s/\r//g")
+	_CODE=$(clientWeb -i $TMP | grep -i "^Location:" | sed -e "s/^.*code=//;s/[#&].*$//;s/\r//g")
 	if test "$_CODE" = ""; then
 		echo "Unable to get OIDC CODE, check your parameters" >&2
 		echo "Tried with: $TMP" >&2
