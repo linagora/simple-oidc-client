@@ -187,10 +187,12 @@ _queryToken () {
 	if test "$LLNG_CONNECTED" != 1; then
 		set -e
 		if test "$LLNG_REFRESH_TOKEN" != ''; then
+			AUTHZ=$(_authz)
 			RAWTOKENS=$(client -XPOST \
 				-d 'grant_type=refresh_token' \
 				--data-urlencode "client_id=${CLIENT_ID}" \
 				--data-urlencode "refresh_token=$LLNG_REFRESH_TOKEN" \
+				$AUTHZ \
 				"$TOKEN_ENDPOINT")
 		else
 			llng_connect
