@@ -40,10 +40,10 @@ clientWeb () {
 	umask 0077
 	if test "$DEBUG" = 1; then
 		echo '> ' curl -sk --user-agent \'LLNG-CLient/2.20.0\' --cookie \"$COOKIEJAR\" \
-			--cookie-jar \"$COOKIEJAR\" -H \"Accept: test/html\" \"$@\" >&2
+			--cookie-jar \"$COOKIEJAR\" -H \"Accept: text/html\" \"$@\" >&2
 	fi
 	curl -s $CURLOPTS --user-agent 'LLNG-CLient/2.20.0' --cookie "$COOKIEJAR" \
-		--cookie-jar "$COOKIEJAR" -H "Accept: test/html" "$@"
+		--cookie-jar "$COOKIEJAR" -H "Accept: text/html" "$@"
 }
 
 uri_escape () {
