@@ -215,6 +215,9 @@ _queryToken () {
 			echo "Scope: $SCOPE"
 		fi
 		_SCOPE=scope=$(uri_escape "${SCOPE}")
+		if echo $SCOPE | grep offline_access; then
+			_SCOPE="$_SCOPE&prompt=consent"
+		fi
 		TMP="${AUTHZ_ENDPOINT}?client_id=${CLIENT_ID}&${REDIRECT_URI}&response_type=code&${_SCOPE}${CODE_CHALLENGE}"
 		CONTENT=$(clientWeb -i $TMP)
 		if echo "$CONTENT"|grep 'id="confirm"' >/dev/null; then
