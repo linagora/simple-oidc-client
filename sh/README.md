@@ -49,14 +49,21 @@ You'll be prompted for any missing option
 * **--password**: your LLNG password
 * **--llng-server**: LLNG portal hostname _(with :port)_, used to calculate
 * **--llng-url**: LLNG portal URL. Default: `https://<value of --llng-server>`.
+* **--choice**: when LLNG uses [Choice](https://lemonldap-ng.org/documentation/latest/authchoice.html), indicate here the authentication to use. Example: `lmAuth=A_LDAP`
+
+Debug options:
+* **--debug**: display [curl](https://manpages.debian.org/bookworm/curl/curl.1.en.html) commands
+* **--curl-opts**: options to add to each curl commands
 
 OpenID-Connect options:
 * application credentials:
   * **--client-id**: the application ID
   * **--client_secret**: the application secret _(if client isn't "public")_
+  * **--pkce**: use [PKCE](https://www.rfc-editor.org/rfc/rfc7636)
 * **--redirect-uri**: one authorized redirect uri of the OpenID-Connect application
 * **--scope**: the wanted scope. Default: `openid profile email`
-* **--refresh-token**: when given, try to get token using the given refresh\_token
+* **--access-token**: when given, use the given `access_token` instead of trying to get one
+* **--refresh-token**: when given, try to get token using the given `refresh_token`
 
 Experimental options:
 * Matrix queries
