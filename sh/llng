@@ -39,6 +39,10 @@ while true; do
 			usage
 			exit
 			;;
+		'--llng-cookie')
+			CURLOPTS="--cookie lemonldap=$1"
+			shift 2
+			;;
 		'-c'|'--cookie-jar')
 			COOKIEJAR="$2"
 			shift 2
