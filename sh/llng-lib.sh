@@ -29,7 +29,7 @@ SCOPE='openid email profile'
 client () {
 	umask 0077
 	if test "$DEBUG" = 1; then
-		echo '> ' curl -sk $CURLOPTS --user-agent \'LLNG-CLient/2.20.0\' \
+		echo `date +'%H:%M:%S'` curl -sk $CURLOPTS --user-agent \'LLNG-CLient/2.20.0\' \
 			--cookie-jar \"$COOKIEJAR\" -H \"Accept: application/json\" \"$@\" >&2
 	fi
 	curl -sk $CURLOPTS --user-agent 'LLNG-CLient/2.20.0' --cookie "$COOKIEJAR" \
@@ -39,7 +39,7 @@ client () {
 clientWeb () {
 	umask 0077
 	if test "$DEBUG" = 1; then
-		echo '> ' curl -sk --user-agent \'LLNG-CLient/2.20.0\' \
+		echo `date +'%H:%M:%S'` curl -sk --user-agent \'LLNG-CLient/2.20.0\' \
 			--cookie-jar \"$COOKIEJAR\" -H \"Accept: text/html\" \"$@\" >&2
 	fi
 	curl -s $CURLOPTS --user-agent 'LLNG-CLient/2.20.0' --cookie "$COOKIEJAR" \
