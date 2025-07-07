@@ -29,27 +29,31 @@ SCOPE='openid email profile'
 client () {
 	umask 0077
 	if test "$DEBUG" = 1; then
-		echo -n `date +'%H:%M:%S'` '-> ' >&2
+		echo -n `date +'%H:%M:%S:%N'` '-> ' >&2
 	fi
 	curl -sk $CURLOPTS --user-agent 'LLNG-CLient/2.20.0' --cookie "$COOKIEJAR" \
 		--cookie-jar "$COOKIEJAR" -H "Accept: application/json" "$@"
+	ret=$?
 	if test "$DEBUG" = 1; then
-		echo `date +'%H:%M:%S'` curl -sk $CURLOPTS --user-agent \'LLNG-CLient/2.20.0\' \
+		echo `date +'%H:%M:%S:%N'` curl -sk $CURLOPTS --user-agent \'LLNG-CLient/2.20.0\' \
 			--cookie-jar \"$COOKIEJAR\" -H \"Accept: application/json\" \"$@\" >&2
 	fi
+	return $ret
 }
 
 clientWeb () {
 	umask 0077
 	if test "$DEBUG" = 1; then
-		echo -n `date +'%H:%M:%S'` '-> ' >&2
+		echo -n `date +'%H:%M:%S:%N'` '-> ' >&2
 	fi
 	curl -s $CURLOPTS --user-agent 'LLNG-CLient/2.20.0' --cookie "$COOKIEJAR" \
 		--cookie-jar "$COOKIEJAR" -H "Accept: text/html" "$@"
+	ret=$?
 	if test "$DEBUG" = 1; then
-		echo `date +'%H:%M:%S'` curl -sk --user-agent \'LLNG-CLient/2.20.0\' \
+		echo `date +'%H:%M:%S:%N'` curl -sk --user-agent \'LLNG-CLient/2.20.0\' \
 			--cookie-jar \"$COOKIEJAR\" -H \"Accept: text/html\" \"$@\" >&2
 	fi
+	return $ret
 }
 
 uri_escape () {
@@ -81,7 +85,7 @@ build_llng_url () {
 
 llng_connect () {
 	LLNG_CONNECTED=0
-	if client -f $LLNG_URL >/dev/null 2>&1; then
+	if client -f  "$LLNG_URL" >/dev/null; then
 		LLNG_CONNECTED=1
 
 	# else try to authenticate
