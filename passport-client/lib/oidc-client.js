@@ -7,19 +7,19 @@
  * Licence: GPL V3 https://www.gnu.org/licenses/gpl-3.0.en.html
  */
 
-const axios = require('axios');
-const crypto = require('crypto');
-const { promisify } = require('util');
-const readline = require('readline');
+const axios = require("axios");
+const crypto = require("crypto");
+const { promisify } = require("util");
+const readline = require("readline");
 
 class OIDCClient {
   constructor(options = {}) {
-    this.llngServer = options.llngServer || 'auth.example.com:19876';
+    this.llngServer = options.llngServer || "auth.example.com:19876";
     this.llngUrl = options.llngUrl || null;
     this.clientId = options.clientId || null;
     this.clientSecret = options.clientSecret || null;
-    this.redirectUri = options.redirectUri || 'http://localhost:9876/callback';
-    this.scope = options.scope || 'openid email profile';
+    this.redirectUri = options.redirectUri || "http://localhost:9876/callback";
+    this.scope = options.scope || "openid email profile";
     this.pkce = options.pkce || false;
     this.debug = options.debug || false;
 
@@ -44,18 +44,18 @@ class OIDCClient {
     // Axios instance with cookie support
     this.client = axios.create({
       headers: {
-        'User-Agent': 'LLNG-Client/2.20.0',
-        'Accept': 'application/json'
+        "User-Agent": "LLNG-Client/2.20.0",
+        Accept: "application/json",
       },
       maxRedirects: 0,
-      validateStatus: (status) => status < 500
+      validateStatus: (status) => status < 500,
     });
   }
 
   _buildLlngUrl() {
-    let url = this.llngServer.replace(/\/+$/, '');
+    let url = this.llngServer.replace(/\/+$/, "");
     if (!url.match(/^https?:\/\//)) {
-      url = 'https://' + url;
+      url = "https://" + url;
     }
     return url;
   }
@@ -70,12 +70,14 @@ class OIDCClient {
   _getCookieHeader() {
     return Object.entries(this.cookies)
       .map(([k, v]) => `${k}=${v}`)
-      .join('; ');
+      .join("; ");
   }
 
   _parseCookies(setCookieHeaders) {
     if (!setCookieHeaders) return;
-    const headers = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
+    const headers = Array.isArray(setCookieHeaders)
+      ? setCookieHeaders
+      : [setCookieHeaders];
     for (const header of headers) {
       const match = header.match(/^([^=]+)=([^;]*)/);
       if (match) {
@@ -90,30 +92,30 @@ class OIDCClient {
       url,
       headers: {
         ...headers,
-        'Cookie': this._getCookieHeader()
-      }
+        Cookie: this._getCookieHeader(),
+      },
     };
 
     if (data) {
-      if (typeof data === 'string') {
+      if (typeof data === "string") {
         config.data = data;
-        config.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+        config.headers["Content-Type"] = "application/x-www-form-urlencoded";
       } else {
         config.data = new URLSearchParams(data).toString();
-        config.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+        config.headers["Content-Type"] = "application/x-www-form-urlencoded";
       }
     }
 
     this._log(`${method} ${url}`);
     const response = await this.client(config);
-    this._parseCookies(response.headers['set-cookie']);
+    this._parseCookies(response.headers["set-cookie"]);
     return response;
   }
 
   async askString(prompt) {
     const rl = readline.createInterface({
       input: process.stdin,
-      output: process.stderr
+      output: process.stderr,
     });
 
     return new Promise((resolve) => {
@@ -127,7 +129,7 @@ class OIDCClient {
   async askPassword(prompt) {
     const rl = readline.createInterface({
       input: process.stdin,
-      output: process.stderr
+      output: process.stderr,
     });
 
     return new Promise((resolve) => {
@@ -136,50 +138,47 @@ class OIDCClient {
       const wasRaw = stdin.isRaw;
       stdin.setRawMode && stdin.setRawMode(true);
 
-      let password = '';
+      let password = "";
       const onData = (char) => {
         char = char.toString();
         switch (char) {
-          case '\n':
-          case '\r':
-          case '\u0004':
+          case "\n":
+          case "\r":
+          case "\u0004":
             stdin.setRawMode && stdin.setRawMode(wasRaw);
-            stdin.removeListener('data', onData);
-            process.stderr.write('\n');
+            stdin.removeListener("data", onData);
+            process.stderr.write("\n");
             rl.close();
             resolve(password);
             break;
-          case '\u0003':
+          case "\u0003":
             process.exit();
             break;
-          case '\u007F':
+          case "\u007F":
             password = password.slice(0, -1);
             break;
           default:
             password += char;
         }
       };
-      stdin.on('data', onData);
+      stdin.on("data", onData);
     });
   }
 
   // PKCE helpers
   _generateCodeVerifier() {
-    return crypto.randomBytes(32).toString('base64url').substring(0, 43);
+    return crypto.randomBytes(32).toString("base64url").substring(0, 43);
   }
 
   _generateCodeChallenge(verifier) {
-    return crypto
-      .createHash('sha256')
-      .update(verifier)
-      .digest('base64url');
+    return crypto.createHash("sha256").update(verifier).digest("base64url");
   }
 
   // OIDC Metadata
   async getOidcMetadata() {
     const url = `${this.llngUrl}/.well-known/openid-configuration`;
     try {
-      const response = await this._request('GET', url);
+      const response = await this._request("GET", url);
       return response.data;
     } catch (error) {
       return null;
@@ -195,7 +194,7 @@ class OIDCClient {
         token: metadata.token_endpoint,
         userinfo: metadata.userinfo_endpoint,
         introspection: metadata.introspection_endpoint,
-        endSession: metadata.end_session_endpoint
+        endSession: metadata.end_session_endpoint,
       };
     } else {
       this.endpoints = {
@@ -203,7 +202,7 @@ class OIDCClient {
         token: `${this.llngUrl}/oauth2/token`,
         userinfo: `${this.llngUrl}/oauth2/userinfo`,
         introspection: `${this.llngUrl}/oauth2/introspect`,
-        endSession: `${this.llngUrl}/oauth2/logout`
+        endSession: `${this.llngUrl}/oauth2/logout`,
       };
     }
 
@@ -213,7 +212,7 @@ class OIDCClient {
   // LemonLDAP::NG Connection
   async llngConnect(login, password, choice) {
     // Test if already connected and get CSRF token
-    const response = await this._request('GET', this.llngUrl);
+    const response = await this._request("GET", this.llngUrl);
 
     // Already connected?
     if (response.status === 200 && response.data && response.data.id) {
@@ -229,16 +228,16 @@ class OIDCClient {
 
     // Get login and password if not provided
     if (!login) {
-      login = await this.askString('Login');
+      login = await this.askString("Login");
     }
     if (!password) {
-      password = await this.askPassword('Password');
+      password = await this.askPassword("Password");
     }
 
     // Authenticate
     const authData = {
       user: login,
-      password: password
+      password: password,
     };
     if (token) {
       authData.token = token;
@@ -247,12 +246,18 @@ class OIDCClient {
       Object.assign(authData, choice);
     }
 
-    const authResponse = await this._request('POST', this.llngUrl, authData);
-    if (authResponse.data && authResponse.data.id && authResponse.data.id !== 'null') {
+    const authResponse = await this._request("POST", this.llngUrl, authData);
+    if (
+      authResponse.data &&
+      authResponse.data.id &&
+      authResponse.data.id !== "null"
+    ) {
       this.connected = true;
       return true;
     } else {
-      throw new Error(`Unable to connect: ${JSON.stringify(authResponse.data)}`);
+      throw new Error(
+        `Unable to connect: ${JSON.stringify(authResponse.data)}`,
+      );
     }
   }
 
@@ -260,17 +265,20 @@ class OIDCClient {
     if (!this.connected) {
       await this.llngConnect();
     }
-    const response = await this._request('GET', `${this.llngUrl}/mysession/?whoami`);
+    const response = await this._request(
+      "GET",
+      `${this.llngUrl}/mysession/?whoami`,
+    );
     return response.data.result;
   }
 
   async getLanguages() {
-    const response = await this._request('GET', `${this.llngUrl}/languages`);
+    const response = await this._request("GET", `${this.llngUrl}/languages`);
     return response.data;
   }
 
   async logout() {
-    const response = await this._request('GET', `${this.llngUrl}/?logout=1`);
+    const response = await this._request("GET", `${this.llngUrl}/?logout=1`);
     return response.data.result === 1;
   }
 
@@ -284,23 +292,30 @@ class OIDCClient {
     if (this.refreshToken) {
       try {
         const tokenData = {
-          grant_type: 'refresh_token',
+          grant_type: "refresh_token",
           client_id: this.clientId,
-          refresh_token: this.refreshToken
+          refresh_token: this.refreshToken,
         };
 
         const headers = {};
         if (this.clientSecret) {
-          const auth = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
-          headers['Authorization'] = `Basic ${auth}`;
+          const auth = Buffer.from(
+            `${this.clientId}:${this.clientSecret}`,
+          ).toString("base64");
+          headers["Authorization"] = `Basic ${auth}`;
         }
 
-        const response = await this._request('POST', this.endpoints.token, tokenData, headers);
+        const response = await this._request(
+          "POST",
+          this.endpoints.token,
+          tokenData,
+          headers,
+        );
         this.rawTokens = response.data;
         this._parseTokens();
         return;
       } catch (error) {
-        this._log('Refresh token failed, trying full auth flow');
+        this._log("Refresh token failed, trying full auth flow");
       }
     }
 
@@ -310,14 +325,14 @@ class OIDCClient {
     }
 
     if (!this.clientId) {
-      this.clientId = await this.askString('Client ID');
+      this.clientId = await this.askString("Client ID");
     }
     if (!this.redirectUri) {
-      this.redirectUri = await this.askString('Redirect URI');
+      this.redirectUri = await this.askString("Redirect URI");
     }
 
     // PKCE setup
-    let pkceParams = '';
+    let pkceParams = "";
     if (this.pkce) {
       this.codeVerifier = this._generateCodeVerifier();
       this.codeChallenge = this._generateCodeChallenge(this.codeVerifier);
@@ -326,24 +341,37 @@ class OIDCClient {
 
     // Build authorization URL
     let scopeParam = `scope=${encodeURIComponent(this.scope)}`;
-    if (this.scope.includes('offline_access')) {
-      scopeParam += '&prompt=consent';
+    if (this.scope.includes("offline_access")) {
+      scopeParam += "&prompt=consent";
     }
 
     const authUrl = `${this.endpoints.authorization}?client_id=${encodeURIComponent(this.clientId)}&redirect_uri=${encodeURIComponent(this.redirectUri)}&response_type=code&${scopeParam}${pkceParams}`;
 
-    this._log('Authorization URL:', authUrl);
+    this._log("Authorization URL:", authUrl);
 
     // Request authorization
-    const authResponse = await this._request('GET', authUrl, null, { 'Accept': 'text/html' });
+    const authResponse = await this._request("GET", authUrl, null, {
+      Accept: "text/html",
+    });
 
     let code = null;
 
     // Check for consent form
-    if (authResponse.data && typeof authResponse.data === 'string' && authResponse.data.includes('id="confirm"')) {
-      const confirmMatch = authResponse.data.match(/id="confirm"[^>]*value="([^"]+)"/);
+    if (
+      authResponse.data &&
+      typeof authResponse.data === "string" &&
+      authResponse.data.includes('id="confirm"')
+    ) {
+      const confirmMatch = authResponse.data.match(
+        /id="confirm"[^>]*value="([^"]+)"/,
+      );
       if (confirmMatch) {
-        const confirmResponse = await this._request('POST', authUrl, { confirm: confirmMatch[1] }, { 'Accept': 'text/html' });
+        const confirmResponse = await this._request(
+          "POST",
+          authUrl,
+          { confirm: confirmMatch[1] },
+          { Accept: "text/html" },
+        );
         const location = confirmResponse.headers.location;
         if (location) {
           const codeMatch = location.match(/code=([^&#]+)/);
@@ -360,16 +388,16 @@ class OIDCClient {
     }
 
     if (!code) {
-      throw new Error('Unable to get OIDC code, check your parameters');
+      throw new Error("Unable to get OIDC code, check your parameters");
     }
 
     // Exchange code for tokens
     const tokenData = {
-      grant_type: 'authorization_code',
+      grant_type: "authorization_code",
       client_id: this.clientId,
       redirect_uri: this.redirectUri,
       scope: this.scope,
-      code: code
+      code: code,
     };
 
     if (this.pkce && this.codeVerifier) {
@@ -378,11 +406,18 @@ class OIDCClient {
 
     const headers = {};
     if (this.clientSecret) {
-      const auth = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
-      headers['Authorization'] = `Basic ${auth}`;
+      const auth = Buffer.from(
+        `${this.clientId}:${this.clientSecret}`,
+      ).toString("base64");
+      headers["Authorization"] = `Basic ${auth}`;
     }
 
-    const tokenResponse = await this._request('POST', this.endpoints.token, tokenData, headers);
+    const tokenResponse = await this._request(
+      "POST",
+      this.endpoints.token,
+      tokenData,
+      headers,
+    );
     this.rawTokens = tokenResponse.data;
     this._parseTokens();
   }
@@ -440,8 +475,8 @@ class OIDCClient {
       token = this.accessToken;
     }
 
-    const response = await this._request('GET', this.endpoints.userinfo, null, {
-      'Authorization': `Bearer ${token}`
+    const response = await this._request("GET", this.endpoints.userinfo, null, {
+      Authorization: `Bearer ${token}`,
     });
     return response.data;
   }
@@ -459,11 +494,18 @@ class OIDCClient {
 
     const headers = {};
     if (this.clientSecret) {
-      const auth = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
-      headers['Authorization'] = `Basic ${auth}`;
+      const auth = Buffer.from(
+        `${this.clientId}:${this.clientSecret}`,
+      ).toString("base64");
+      headers["Authorization"] = `Basic ${auth}`;
     }
 
-    const response = await this._request('POST', this.endpoints.introspection, { token }, headers);
+    const response = await this._request(
+      "POST",
+      this.endpoints.introspection,
+      { token },
+      headers,
+    );
     return response.data;
   }
 
@@ -472,7 +514,7 @@ class OIDCClient {
     const matrixUrl = `https://${matrixServer}/_matrix/client`;
 
     // Get provider
-    const loginResponse = await this._request('GET', `${matrixUrl}/v3/login`);
+    const loginResponse = await this._request("GET", `${matrixUrl}/v3/login`);
     const provider = loginResponse.data.flows[0]?.identity_providers[0]?.id;
 
     if (!this.connected) {
@@ -480,30 +522,39 @@ class OIDCClient {
     }
 
     // SSO redirect
-    const ssoUrl = `${matrixUrl}/r0/login/sso/redirect/${provider}?redirectUrl=${encodeURIComponent('http://localhost:9876')}`;
-    const ssoResponse = await this._request('GET', ssoUrl, null, { 'Accept': 'text/html' });
+    const ssoUrl = `${matrixUrl}/r0/login/sso/redirect/${provider}?redirectUrl=${encodeURIComponent("http://localhost:9876")}`;
+    const ssoResponse = await this._request("GET", ssoUrl, null, {
+      Accept: "text/html",
+    });
 
     // Follow redirects manually to get login token
     let location = ssoResponse.headers.location;
     let content = ssoResponse.data;
 
-    while (location && !location.includes('loginToken=')) {
-      const response = await this._request('GET', location, null, { 'Accept': 'text/html' });
+    while (location && !location.includes("loginToken=")) {
+      const response = await this._request("GET", location, null, {
+        Accept: "text/html",
+      });
       location = response.headers.location;
       content = response.data;
     }
 
     const loginTokenMatch = (location || content).match(/loginToken=([^"&]+)/);
     if (!loginTokenMatch) {
-      throw new Error('Unable to get matrix login_token');
+      throw new Error("Unable to get matrix login_token");
     }
 
     // Exchange for matrix token
-    const matrixLoginResponse = await this._request('POST', `${matrixUrl}/v3/login`, JSON.stringify({
-      initial_device_display_name: 'Passport Test Client',
-      token: loginTokenMatch[1],
-      type: 'm.login.token'
-    }), { 'Content-Type': 'application/json' });
+    const matrixLoginResponse = await this._request(
+      "POST",
+      `${matrixUrl}/v3/login`,
+      JSON.stringify({
+        initial_device_display_name: "Passport Test Client",
+        token: loginTokenMatch[1],
+        type: "m.login.token",
+      }),
+      { "Content-Type": "application/json" },
+    );
 
     return matrixLoginResponse.data.access_token;
   }
@@ -515,10 +566,15 @@ class OIDCClient {
       matrixToken = await this.getMatrixToken(matrixServer);
     }
 
-    const response = await this._request('POST', `${matrixUrl}/v3/user/${matrixUser}/openid/request_token`, '{}', {
-      'Authorization': `Bearer ${matrixToken}`,
-      'Content-Type': 'application/json'
-    });
+    const response = await this._request(
+      "POST",
+      `${matrixUrl}/v3/user/${matrixUser}/openid/request_token`,
+      "{}",
+      {
+        Authorization: `Bearer ${matrixToken}`,
+        "Content-Type": "application/json",
+      },
+    );
 
     return response.data.access_token;
   }
@@ -530,18 +586,25 @@ class OIDCClient {
 
     const headers = {};
     if (this.clientSecret) {
-      const auth = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
-      headers['Authorization'] = `Basic ${auth}`;
+      const auth = Buffer.from(
+        `${this.clientId}:${this.clientSecret}`,
+      ).toString("base64");
+      headers["Authorization"] = `Basic ${auth}`;
     }
 
-    const response = await this._request('POST', this.endpoints.token, {
-      grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange',
-      client_id: this.clientId,
-      subject_token: matrixToken,
-      scope: this.scope,
-      subject_issuer: subjectIssuer,
-      audience: audience
-    }, headers);
+    const response = await this._request(
+      "POST",
+      this.endpoints.token,
+      {
+        grant_type: "urn:ietf:params:oauth:grant-type:token-exchange",
+        client_id: this.clientId,
+        subject_token: matrixToken,
+        scope: this.scope,
+        subject_issuer: subjectIssuer,
+        audience: audience,
+      },
+      headers,
+    );
 
     return response.data;
   }
