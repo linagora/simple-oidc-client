@@ -40,7 +40,11 @@ while true; do
 			exit
 			;;
 		'--llng-cookie')
-			CURLOPTS="--cookie lemonldap=$2"
+			#CURLOPTS="--cookie lemonldap=$2"
+			case "$2" in
+			  *=*) CURLOPTS="--cookie $2" ;;
+			  *) CURLOPTS="--cookie lemonldap=$2" ;;
+			esac
 			shift 2
 			;;
 		'-c'|'--cookie-jar')
