@@ -38,5 +38,8 @@
     "rollup-plugin-node-polyfills": "^0.2.1",
     "rollup-plugin-shebang-bin": "^0.0.5",
     "yargs": "^17.7.2"
+  },
+  "overrides": {
+    "minimatch": "^10.2.1"
   }
 }
