@@ -118,6 +118,23 @@ llng_connect () {
 		if echo "$TMP" | jq -r ".id" >/dev/null 2>&1; then
 			LLNG_CONNECTED=1
 			ID=$(echo "$TMP" | jq -r ".id")
+		else
+			if echo "$TMP" | grep -E 'form .*action="/2fchoice"' >/dev/null; then
+				TOKEN=$( echo "$TMP" | grep -E 'id="token"' | sed -e 's/^.*value="\(.*\)".*$/\1/')
+				# sf=totp&token=token
+				TMP=$(client -XPOST -d "sf=totp" -d "token=$TOKEN" $LLNG_URL/2fchoice)
+			fi
+			if echo "$TMP" | grep -E 'form .*action="/totp2fcheck"' >/dev/null; then
+				TOTP=$(askString 'TOTP')
+				if test "$TOTP" != ""; then
+					TOKEN=$( echo "$TMP" | grep -E 'id="token"' | sed -e 's/^.*value="\(.*\)".*$/\1/')
+					TMP=$(client -XPOST -d "token=$TOKEN" -d "code=$TOTP" $LLNG_URL/totp2fcheck)
+					if echo "$TMP" | jq -r ".id" >/dev/null 2>&1; then
+						LLNG_CONNECTED=1
+						ID=$(echo "$TMP" | jq -r ".id")
+					fi
+				fi
+			fi
 		fi
 		if test "$ID" = "null" -o "$ID" = ""; then
 			echo "Unable to connect:" >&2
