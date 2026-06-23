@@ -119,6 +119,10 @@ while true; do
 			LLNG_CHOICE="$2"
 			shift 2
 			;;
+		'--pam-duration')
+			PAM_DURATION="$2"
+			shift 2
+			;;
 		'--')
                         shift
                         break
@@ -199,6 +203,9 @@ case "$COMMAND" in
 		;;
 	matrix_token_exchange)
 		getAccessTokenFromMatrixToken "$@"
+		;;
+	pam_token)
+		getPamToken
 		;;
 	*)
 		echo "BAD COMMAND $COMMAND" >&2

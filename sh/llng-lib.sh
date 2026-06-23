@@ -23,6 +23,7 @@ PROMPT=no
 LLNG_SERVER="auth.example.com:19876"
 PKCE=0
 SCOPE='openid email profile'
+PAM_DURATION=600
 
 # CURL clients
 
@@ -369,6 +370,22 @@ getMatrixToken () {
 		_getMatrixToken
 	fi
 	echo $MATRIX_TOKEN
+}
+
+# 3. PAM
+
+getPamToken () {
+	if test "$LLNG_CONNECTED" != 1; then
+		llng_connect
+	fi
+	TMP=$(client -XPOST -d '{"duration":'"$PAM_DURATION"'}' "${LLNG_URL}/pam")
+	if echo "$TMP" | jq -e .token >/dev/null 2>&1; then
+		echo "$TMP" | jq -r .token
+	else
+		echo "Unable to get PAM token:" >&2
+		echo "$TMP" >&2
+		exit 1
+	fi
 }
 
 _getMatrixFederationToken () {

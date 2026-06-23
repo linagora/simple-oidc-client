@@ -27,6 +27,8 @@ $ llng <options> <command> <parameters>
   * **introspection**: get OpenID-Connect response to `/introspect`
     query _(JSON)_. If no `access_token` is given in parameters, will query a
     new one using `getOidcTokens()`
+* **pam_token**: get a PAM token _(LLNG `/pam` endpoint)_. Returns the `token`
+  value. Use **--pam-duration** to change the requested lifetime _(default: `600`)_
 * Experimental commands:
   * **matrix_token**: get a Matrix `access_token` from a Matrix server
     connected to LLNG using OpenID-Connect
@@ -50,6 +52,7 @@ You'll be prompted for any missing option
 * **--llng-server**: LLNG portal hostname _(with :port)_, used to calculate
 * **--llng-url**: LLNG portal URL. Default: `https://<value of --llng-server>`.
 * **--choice**: when LLNG uses [Choice](https://lemonldap-ng.org/documentation/latest/authchoice.html), indicate here the authentication to use. Example: `lmAuth=A_LDAP`
+* **--pam-duration**: requested lifetime _(in seconds)_ for the **pam_token** command. Default: `600`
 
 Debug options:
 * **--debug**: display [curl](https://manpages.debian.org/bookworm/curl/curl.1.en.html) commands
@@ -92,6 +95,7 @@ file. Then you'll have these functions, corresponding to the different commands:
 * **getAccessTokenFromMatrixToken**
 * **getMatrixToken**
 * **getMatrixFederationToken**
+* **getPamToken**
 
 ## License and copyright
 
