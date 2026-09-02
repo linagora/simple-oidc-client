@@ -27,6 +27,14 @@ $ llng <options> <command> <parameters>
   * **introspection**: get OpenID-Connect response to `/introspect`
     query _(JSON)_. If no `access_token` is given in parameters, will query a
     new one using `getOidcTokens()`
+  * **revoke_access_token**: revoke an `access_token` using the
+    [RFC 7009](https://www.rfc-editor.org/rfc/rfc7009) `/revoke` endpoint.
+    If no `access_token` is given in parameters, will query a new one using
+    `getOidcTokens()`. Client credentials are required. Outputs nothing and
+    exits `0` when the server accepted the request. Beware that the endpoint
+    answers `200` with an empty body even when the token is unknown, so a
+    success does not prove a token was dropped: check the server audit log
+    _(`ISSUER_OIDC_ACCESS_TOKEN_REVOKE` versus `..._REVOKE_NOT_FOUND`)_
 * **pam_token**: get a PAM token _(LLNG `/pam` endpoint)_. Returns the `token`
   value. Use **--pam-duration** to change the requested lifetime _(default: `600`)_
 * Experimental commands:
@@ -92,6 +100,7 @@ file. Then you'll have these functions, corresponding to the different commands:
 * **getRefreshToken**
 * **getUserInfo**
 * **getIntrospection**
+* **revokeAccessToken**
 * **getAccessTokenFromMatrixToken**
 * **getMatrixToken**
 * **getMatrixFederationToken**

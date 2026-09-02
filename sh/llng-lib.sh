@@ -190,12 +190,18 @@ getOidcEndpoints () {
 		export ENDSESSION_ENDPOINT="${LLNG_URL}/oauth2/logout"
 		export USERINFO_ENDPOINT="${LLNG_URL}/oauth2/userinfo"
 		export INTROSPECTION_ENDPOINT="${LLNG_URL}/oauth2/introspect"
+		export REVOCATION_ENDPOINT="${LLNG_URL}/oauth2/revoke"
 	else
 		export AUTHZ_ENDPOINT=$(echo $TMP | jq -r .authorization_endpoint)
 		export TOKEN_ENDPOINT=$(echo $TMP | jq -r .token_endpoint)
 		export ENDSESSION_ENDPOINT=$(echo $TMP | jq -r .end_session_endpoint)
 		export USERINFO_ENDPOINT=$(echo $TMP | jq -r .userinfo_endpoint)
 		export INTROSPECTION_ENDPOINT=$(echo $TMP | jq -r .introspection_endpoint)
+		export REVOCATION_ENDPOINT=$(echo $TMP | jq -r '.revocation_endpoint // empty')
+		# Older servers may not advertise it
+		if test "$REVOCATION_ENDPOINT" = ''; then
+			export REVOCATION_ENDPOINT="${LLNG_URL}/oauth2/revoke"
+		fi
 	fi
 }
 
@@ -336,6 +342,38 @@ getIntrospection () {
 	fi
 	AUTHZ=$(_authz)
 	client $AUTHZ -d "token=$TOKEN" "$INTROSPECTION_ENDPOINT" | jq -S
+}
+
+# Revoke an access_token (RFC 7009). The endpoint answers an empty body with a
+# 200 status even when the token is unknown, so a success here only means the
+# request was accepted: check the server audit log to confirm a token was
+# actually dropped.
+# LLNG reads the non-standard "token_hint" parameter, both names are sent to
+# stay compatible with standard providers.
+revokeAccessToken () {
+	TOKEN=${1:-$LLNG_ACCESS_TOKEN}
+	if test "$REVOCATION_ENDPOINT" = ''; then
+		getOidcEndpoints
+	fi
+	if test "$TOKEN" = ''; then
+		_queryToken
+		TOKEN="$LLNG_ACCESS_TOKEN"
+	fi
+	AUTHZ=$(_authz)
+	_STATUS=$(client -XPOST $AUTHZ \
+		--data-urlencode "token=$TOKEN" \
+		-d 'token_hint=access_token' \
+		-d 'token_type_hint=access_token' \
+		-o /dev/null -w '%{http_code}' \
+		"$REVOCATION_ENDPOINT")
+	if test "$_STATUS" = '200'; then
+		if test "$TOKEN" = "$LLNG_ACCESS_TOKEN"; then
+			LLNG_ACCESS_TOKEN=''
+		fi
+		return 0
+	fi
+	echo "Unable to revoke access_token (HTTP $_STATUS)" >&2
+	return 1
 }
 
 _getMatrixToken () {

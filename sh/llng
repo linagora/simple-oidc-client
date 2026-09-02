@@ -195,6 +195,9 @@ case "$COMMAND" in
 	introspection)
 		getIntrospection "$@"
 		;;
+	revoke_access_token)
+		revokeAccessToken "$@"
+		;;
 	matrix_token)
 		getMatrixToken "$@"
 		;;
