@@ -3,13 +3,12 @@
 import fetch from 'node-fetch';
 import { Issuer, generators } from 'openid-client';
 import express from 'express';
-import bodyParser from 'body-parser';
 import jwt_decode from 'jwt-decode';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 const app = express();
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 
 let client = '';
 let issuerMetadata = '';
@@ -156,7 +155,7 @@ app.post('/config', (req, res) => {
 /**
  * Default cathc: detect back-channel or warn
  */
-app.get('*', (req, res) => {
+app.get('/{*splat}', (req, res) => {
   if (req.path === uriBack) {
     return back(req, res)
   }
