@@ -19,6 +19,10 @@ $ llng <options> <command> <parameters>
   * **oidc_endpoints**: get OpenID-Connect endpoints _(from metadata)_
   * **oidc_tokens**: get the raw response of OIDC `/token` query _(JSON)_
   * **access_token**: get an OpenID-Connect `access_token`
+  * **client_credentials_token**: get an `access_token` using the OAuth2
+    Client Credentials Grant _(no user session: requires **--client-id** and
+    **--client-secret**, the application must allow this grant)_. Use
+    **--scope** to set the requested scope
   * **id_token**: get an OpenID-Connect `id_token`
   * **refresh_token**: get an OpenID-Connect `refresh_token`
   * **user_info**: get OpenID-Connect response to `/userinfo` query _(JSON)_.
@@ -55,6 +59,10 @@ $ llng <options> <command> <parameters>
 You'll be prompted for any missing option
 
 * **--cookie-jar**: where to store LLNG sessions. Default: `~/.cache/llng-cookies`
+* **--force-renew**: ignore the session cached in the cookie jar and force a new
+  authentication _(the portal issues a new cookie)_. The portal cookies are
+  removed from the jar before connecting, other cookies are kept.
+  _(aliases: **-n**, **--renew**)_
 * **--login**: your LLNG login _(alias: **--user**)_
 * **--password**: your LLNG password
 * **--llng-server**: LLNG portal hostname _(with :port)_, used to calculate
@@ -87,6 +95,8 @@ To use this inside a shell program, you can simple "source" the [llng-lib.sh](./
 file. Then you'll have these functions, corresponding to the different commands:
 
 * **llng_connect**: establish LLNG connexion _(== get a valid cookie)_
+* **dropLlngCookies**: remove the portal cookies from the cookie jar _(used by
+  **--force-renew**, i.e. when `FORCE_RENEW=1`)_
 * **getLanguages**
 * **getLlngId**
 * **getOidcMetadata**
@@ -96,6 +106,7 @@ file. Then you'll have these functions, corresponding to the different commands:
   * **getCodeChallenge**
 * **getOidcTokens**
 * **getAccessToken**
+* **getClientCredentialsToken**
 * **getIdToken**
 * **getRefreshToken**
 * **getUserInfo**

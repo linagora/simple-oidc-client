@@ -24,6 +24,7 @@ LLNG_SERVER="auth.example.com:19876"
 PKCE=0
 SCOPE='openid email profile'
 PAM_DURATION=600
+FORCE_RENEW=0
 
 # CURL clients
 
@@ -84,9 +85,36 @@ build_llng_url () {
 
 # 1. LLNG Connection
 
+# Remove the portal cookies from the cookie jar: without them, the next query
+# can't reuse the cached session and a real authentication is required.
+# Cookies set for a parent domain of the portal are dropped too.
+dropLlngCookies () {
+	test -f "$COOKIEJAR" || return 0
+	_HOST=$(echo "$LLNG_URL" | sed -e 's#^[a-zA-Z]*://##' -e 's#[:/].*$##')
+	umask 0077
+	perl -i -ne 'BEGIN{$h = lc shift}
+		@F = split /\t/;
+		if (@F >= 7) {
+			$d = lc $F[0];
+			$d =~ s/^\#httponly_//;
+			$d =~ s/^\.//;
+			next if $d ne "" and ($h eq $d or $h =~ /\.\Q$d\E$/);
+		}
+		print' "$_HOST" "$COOKIEJAR"
+}
+
 llng_connect () {
 	LLNG_CONNECTED=0
-	if client -f  "$LLNG_URL" >/dev/null; then
+
+	# --force-renew: forget the cached session, a new cookie must be issued
+	_RENEW=0
+	if test "$FORCE_RENEW" = 1; then
+		dropLlngCookies
+		FORCE_RENEW=0
+		_RENEW=1
+	fi
+
+	if test "$_RENEW" != 1 && client -f  "$LLNG_URL" >/dev/null; then
 		LLNG_CONNECTED=1
 
 	# else try to authenticate
@@ -316,6 +344,39 @@ getRefreshToken () {
 		_queryToken
 	fi
 	echo $LLNG_REFRESH_TOKEN
+}
+
+# 2.3 Client Credentials Grant: the application authenticates itself, no user
+# session involved (no LLNG connection)
+_queryClientCredentialsToken () {
+	if test "$TOKEN_ENDPOINT" = ""; then
+		getOidcEndpoints
+	fi
+	AUTHZ=$(_authz)
+	if test "$CLIENT_SECRET" = ""; then
+		echo "Client Credentials Grant requires --client-secret" >&2
+		exit 1
+	fi
+	if test "$DEBUG" = 1; then
+		echo "Scope: $SCOPE" >&2
+	fi
+	RAWTOKENS=$(client -XPOST -SsL \
+		-d 'grant_type=client_credentials' \
+		--data-urlencode "scope=${SCOPE}" \
+		$AUTHZ \
+		"$TOKEN_ENDPOINT")
+	if echo "$RAWTOKENS" | grep access_token >/dev/null 2>&1; then
+		LLNG_ACCESS_TOKEN=$(echo "$RAWTOKENS" | jq -r .access_token)
+	else
+		echo "Bad response:" >&2
+		echo $RAWTOKENS >&2
+		exit 3
+	fi
+}
+
+getClientCredentialsToken () {
+	_queryClientCredentialsToken
+	echo $LLNG_ACCESS_TOKEN
 }
 
 getUserInfo () {
