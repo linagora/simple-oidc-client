@@ -148,7 +148,7 @@ done
 
 if test "$LLNG_SERVER" = "" -a "$LLNG_URL" = ""
 then
-	LLNG_SERVER=$(askString Server)
+	LLNG_SERVER=$(askString Server) || exit 1
 fi
 
 if test "$LLNG_URL" = ""
