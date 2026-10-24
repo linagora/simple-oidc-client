@@ -56,7 +56,9 @@ $ llng <options> <command> <parameters>
 
 ## Options
 
-You'll be prompted for any missing option
+You'll be prompted for any missing option. Without a terminal to answer on
+(a cron job, a pipe, an Ansible lookup), `llng` fails with `Unable to read ...`
+instead of waiting.
 
 * **--cookie-jar**: where to store LLNG sessions. Default: `~/.cache/llng-cookies`
 * **--force-renew**: ignore the session cached in the cookie jar and force a new

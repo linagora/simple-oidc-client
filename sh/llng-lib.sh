@@ -2,19 +2,27 @@
 
 # LemonLDAP::NG libraries
 
+# Ask for a value on the terminal until one is given. On end of input -- no
+# terminal (a cron job, an Ansible lookup, a closed pipe) or Ctrl-D -- read
+# fails and would fail again: asking once more looped forever at 100% CPU.
+# Fail instead; callers exit, so that a command run without a session and
+# without a terminal errors out rather than hangs.
 askString () {
 	_READ=''
 	while [ "$_READ" = "" ]
 	do
-		read -p "$1: " _READ
-		#if test "$_READ" != ""; then
-		#	echo OK
-		#	break
-		#fi
+		if ! read -p "$1: " _READ; then
+			echo "Unable to read $1: no input (not a terminal?)" >&2
+			return 1
+		fi
 	done
 
 	echo $_READ
 }
+
+# stty on something that is not a terminal only prints an error.
+echoOff () { test -t 0 && stty -echo; }
+echoOn () { test -t 0 && stty echo; }
 
 # Default values, overriden by options
 
@@ -64,7 +72,7 @@ uri_escape () {
 
 _authz () {
 	if test "$CLIENT_ID" = "" ; then
-		CLIENT_ID=$(askString 'Client ID')
+		CLIENT_ID=$(askString 'Client ID') || exit 1
 	fi
 	if test "$CLIENT_SECRET" != ""; then
 		echo "--basic -u $CLIENT_ID:$CLIENT_SECRET"
@@ -121,14 +129,14 @@ llng_connect () {
 	else
 		if test "$LLNG_LOGIN" = ""
 		then
-			LLNG_LOGIN=$(askString Login)
+			LLNG_LOGIN=$(askString Login) || exit 1
 		fi
 
 		if test "$PROMPT" = yes -o "$LLNG_PASSWORD" = ""
 		then
-			stty -echo
-			LLNG_PASSWORD=$(askString Password)
-			stty echo
+			echoOff
+			LLNG_PASSWORD=$(askString Password) || { echoOn; exit 1; }
+			echoOn
 			echo
 		fi
 
@@ -154,7 +162,7 @@ llng_connect () {
 				TMP=$(client -XPOST -d "sf=totp" -d "token=$TOKEN" $LLNG_URL/2fchoice)
 			fi
 			if echo "$TMP" | grep -E 'form .*action="/totp2fcheck"' >/dev/null; then
-				TOTP=$(askString 'TOTP')
+				TOTP=$(askString 'TOTP') || exit 1
 				if test "$TOTP" != ""; then
 					TOKEN=$( echo "$TMP" | grep -E 'id="token"' | sed -e 's/^.*value="\(.*\)".*$/\1/')
 					TMP=$(client -XPOST -d "token=$TOKEN" -d "code=$TOTP" $LLNG_URL/totp2fcheck)
@@ -270,7 +278,7 @@ _queryToken () {
 		fi
 		AUTHZ=$(_authz)
 		if test "$REDIRECT_URI" = ""; then
-			REDIRECT_URI=$(askString 'Redirect URI')
+			REDIRECT_URI=$(askString 'Redirect URI') || exit 1
 		fi
 		REDIRECT_URI=redirect_uri=$(uri_escape "$REDIRECT_URI")
 		if test "$DEBUG" = 1; then
@@ -439,7 +447,7 @@ revokeAccessToken () {
 
 _getMatrixToken () {
 	if test "$MATRIX_SERVER" = ""; then
-		MATRIX_SERVER=$(askString 'Matrix server')
+		MATRIX_SERVER=$(askString 'Matrix server') || exit 1
 	fi
 	MATRIX_URL=${MATRIX_URL:-https://$MATRIX_SERVER}/_matrix/client
 	if test "$MATRIX_TOKEN" = ""; then
@@ -489,13 +497,13 @@ getPamToken () {
 
 _getMatrixFederationToken () {
 	if test "$MATRIX_SERVER" = ""; then
-		MATRIX_SERVER=$(askString 'Matrix server')
+		MATRIX_SERVER=$(askString 'Matrix server') || exit 1
 	fi
 	MATRIX_URL=${MATRIX_URL:-https://$MATRIX_SERVER}/_matrix/client
 	MATRIX_TOKEN=${1:-$MATRIX_TOKEN}
 	if test "$MATRIX_USER" = ""; then
 		if test "$LLNG_LOGIN" = ""; then
-			MATRIX_USER=$(askString 'Matrix username')
+			MATRIX_USER=$(askString 'Matrix username') || exit 1
 		else
 			MATRIX_USER=@$LLNG_LOGIN:$(echo $LLNG_SERVER | perl -pe 's/.*?\.//')
 		fi
