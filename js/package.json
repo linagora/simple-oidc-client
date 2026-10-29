@@ -27,7 +27,7 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.3",
     "@rollup/plugin-json": "^6.0.0",
-    "@rollup/plugin-node-resolve": "^15.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^0.1.0",
     "express": "^5.2.1",
     "jwt-decode": "^3.1.2",
@@ -40,6 +40,7 @@
     "yargs": "^17.7.2"
   },
   "overrides": {
+    "deepmerge": "4.1.2",
     "minimatch": "^10.2.1"
   }
 }
