@@ -1,0 +1,11 @@
+# Inscrit ce dépôt au bot auto-js-pr (mises à jour de dépendances vulnérables).
+#
+# Deux projets npm indépendants, chacun avec sa branche et sa pull request.
+projects:
+  - dir: js
+    verifyCommands:
+      - npm run build
+
+  # Ni test ni build : le résultat de l'audit est la seule preuve.
+  - dir: passport-client
+    autoDetectVerify: false
