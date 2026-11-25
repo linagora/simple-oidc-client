@@ -396,7 +396,16 @@ getUserInfo () {
 		_queryToken
 		TOKEN="$LLNG_ACCESS_TOKEN"
 	fi
-	client -H "Authorization: Bearer $TOKEN"  "$USERINFO_ENDPOINT" | jq -S
+	_USERINFO=$(client -H "Authorization: Bearer $TOKEN"  "$USERINFO_ENDPOINT")
+	# A RP with a "UserInfo signature algorithm" gets a JWT (application/jwt)
+	# instead of JSON: print its payload. The signature is not verified.
+	# The notice goes to stderr to keep stdout a pure JSON
+	if echo "$_USERINFO" | grep -Eq '^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]*$'; then
+		_ALG=$(perl -MMIME::Base64=decode_base64url -e 'print decode_base64url((split /\./, $ARGV[0])[0])' "$_USERINFO" | jq -r '.alg // "?"')
+		echo "Signed UserInfo (JWT, alg: $_ALG), signature not verified" >&2
+		_USERINFO=$(perl -MMIME::Base64=decode_base64url -e 'print decode_base64url((split /\./, $ARGV[0])[1])' "$_USERINFO")
+	fi
+	echo "$_USERINFO" | jq -S
 }
 
 getIntrospection () {

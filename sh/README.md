@@ -26,6 +26,8 @@ $ llng <options> <command> <parameters>
   * **id_token**: get an OpenID-Connect `id_token`
   * **refresh_token**: get an OpenID-Connect `refresh_token`
   * **user_info**: get OpenID-Connect response to `/userinfo` query _(JSON)_.
+    A signed response (JWT) is decoded, its signature is not verified (a
+    notice is printed on stderr).
     If no `access_token` is given in parameters, will query a new one using
     `getOidcTokens()`
   * **introspection**: get OpenID-Connect response to `/introspect`
